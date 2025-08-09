@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestionale Inventario Pneumatici</title>
+    <title>Gestionale Inventario Pneumatici - Sistema Professionale</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDK v9 -->
+    
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, set, get, onValue, push, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-        import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getDatabase, ref, push, set, remove, onValue, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
 
-        // La TUA configurazione Firebase (gomme2)
         const firebaseConfig = {
             apiKey: "AIzaSyAuom2xB08c9EMEJF3qLC1dFR4sk9GtccY",
             authDomain: "gomme2.firebaseapp.com",
@@ -19,37 +19,63 @@
             projectId: "gomme2",
             storageBucket: "gomme2.firebasestorage.app",
             messagingSenderId: "386566184650",
-            appId: "1:386566184650:web:50fc2d56e5c326f5599e33"
+            appId: "1:386566184650:web:50fc2d56e5c326f5599e33",
+            measurementId: "G-KRE6HNQG2C"
         };
 
-        // Inizializza Firebase
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-        const auth = getAuth(app);
-
-        // Rendi disponibili globalmente
-        window.firebaseApp = app;
-        window.firebaseDB = database;
-        window.firebaseAuth = auth;
-        window.firebaseRefs = { ref, set, get, onValue, push, serverTimestamp };
-        window.authFunctions = { signInAnonymously, onAuthStateChanged };
+        try {
+            const app = initializeApp(firebaseConfig);
+            const analytics = getAnalytics(app);
+            const database = getDatabase(app);
+            
+            // Rendi disponibili globalmente
+            window.firebaseDB = database;
+            window.firebaseRefs = { ref, push, set, remove, onValue, serverTimestamp };
+            window.firebaseReady = true;
+            window.offlineMode = false;
+            
+            console.log('✅ Firebase connesso con successo!');
+            
+            // Notifica che Firebase è pronto
+            window.dispatchEvent(new CustomEvent('firebaseReady'));
+            
+        } catch (error) {
+            console.error('❌ Errore connessione Firebase:', error);
+            window.firebaseReady = false;
+            window.offlineMode = true;
+            window.dispatchEvent(new CustomEvent('firebaseError', { detail: error }));
+        }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { 
-            font-family: 'Inter', sans-serif; 
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            touch-action: manipulation;
         }
         
         .brand-logo {
-            width: 60px;
-            height: 40px;
+            width: 70px;
+            height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 12px;
-            border-radius: 6px;
+            font-weight: 700;
+            font-size: 11px;
+            border-radius: 8px;
             color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
         
         .michelin { background: linear-gradient(135deg, #1e40af, #3b82f6); }
@@ -60,26 +86,43 @@
         .pirelli { background: linear-gradient(135deg, #1f2937, #374151); }
         .bridgestone { background: linear-gradient(135deg, #b91c1c, #dc2626); }
         .goodyear { background: linear-gradient(135deg, #0891b2, #06b6d4); }
+        .dunlop { background: linear-gradient(135deg, #16a34a, #22c55e); }
+        .yokohama { background: linear-gradient(135deg, #ea580c, #f97316); }
         
-        .season-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
+        /* Stile per marche personalizzate */
+        .brand-logo:not(.michelin):not(.riken):not(.falken):not(.sailun):not(.continental):not(.pirelli):not(.bridgestone):not(.goodyear):not(.dunlop):not(.yokohama) {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: 2px solid #a855f7;
         }
         
-        .estive { background: #fef3c7; color: #92400e; }
-        .invernali { background: #dbeafe; color: #1e40af; }
-        .quattro-stagioni { background: #d1fae5; color: #065f46; }
+        .season-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .estive { background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; }
+        .invernali { background: #dbeafe; color: #1e40af; border: 1px solid #60a5fa; }
+        .quattro-stagioni { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
         
         .speed-code {
             display: inline-block;
-            background: #f3f4f6;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 700;
+            border: 1px solid #d1d5db;
+        }
+        
+        .speed-code.commercial {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            color: white;
+            border: 1px solid #f59e0b;
         }
         
         .modal {
@@ -90,715 +133,1281 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
         }
-        
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
         }
-        
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+        .loading {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
-        
+
         @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        
-        .firebase-status {
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
             transition: all 0.3s ease;
         }
-        
-        .firebase-connecting {
-            animation: pulse 1.5s infinite;
-        }
-        
-        .firebase-connected {
-            animation: none;
-        }
-        
-        .firebase-error {
-            animation: pulse 2s infinite;
-        }
-        
-        /* Responsive design */
-        @media screen and (max-width: 768px) {
-            .max-w-7xl {
-                padding-left: 12px;
-                padding-right: 12px;
-            }
-            
-            .grid-cols-1.md\\:grid-cols-4 {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-            }
-            
-            table {
-                min-width: 800px;
-                font-size: 14px;
-            }
-            
-            .modal-content {
-                margin: 20px;
-                max-height: calc(100vh - 40px);
-                width: calc(100% - 40px);
-            }
-        }
-        
-        /* GitHub Pages deployment indicator */
-        .deployment-badge {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #24292e, #586069);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000;
-        }
-        
-        .deployment-badge:hover {
+
+        .stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .tire-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .tire-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            background: rgba(255, 255, 255, 1);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .search-input {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            background: rgba(255, 255, 255, 1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .notification {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: translateY(-1px);
+        }
+
+        /* Mobile-specific improvements */
+        @media (max-width: 640px) {
+            .brand-logo {
+                width: 50px;
+                height: 35px;
+                font-size: 9px;
+            }
+            
+            .modal {
+                padding: 0;
+            }
+            
+            .tire-card {
+                border-radius: 12px;
+            }
+            
+            .season-badge {
+                padding: 4px 8px;
+                font-size: 10px;
+            }
+            
+            .speed-code {
+                padding: 2px 6px;
+                font-size: 10px;
+            }
+        }
+
+        /* iOS Safari specific fixes */
+        @supports (-webkit-touch-callout: none) {
+            .search-input, select, input, textarea {
+                -webkit-appearance: none;
+                border-radius: 8px;
+            }
+            
+            .modal {
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        /* Android Chrome specific fixes */
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+            select {
+                background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23666' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
+                background-repeat: no-repeat;
+                background-position: right 12px center;
+                background-size: 12px;
+                padding-right: 40px;
+            }
+        }
+
+        /* High DPI displays */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .brand-logo {
+                text-shadow: 0 0.5px 1px rgba(0,0,0,0.3);
+            }
+        }
+
+        /* Landscape mobile orientation */
+        @media (max-width: 896px) and (orientation: landscape) {
+            .modal > div {
+                max-height: 85vh;
+                overflow-y: auto;
+            }
+        }
+
+        /* Text truncation utility */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen gradient-bg">
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row md:justify-between md:items-center py-4 space-y-3 md:space-y-0">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <span class="text-white font-bold text-lg">🛞</span>
-                    </div>
-                    <div>
-                        <h1 class="text-lg md:text-xl font-bold text-gray-900">Gestionale Pneumatici</h1>
-                        <p class="text-xs md:text-sm text-gray-500">Sistema gratuito con Firebase + GitHub Pages</p>
+    <header class="glass-effect shadow-lg border-b border-white/20 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16 sm:h-20">
+                <div class="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
+                    <div class="flex-shrink-0">
+                        <div class="flex items-center space-x-2 sm:space-x-3">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                                </svg>
+                            </div>
+                            <div class="hidden xs:block">
+                                <h1 class="text-lg sm:text-2xl font-bold text-gray-800 truncate">TireManager Pro</h1>
+                                <p class="text-xs sm:text-sm text-gray-600 hidden sm:block">Sistema Gestionale Pneumatici</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
-                    <!-- Firebase Status -->
-                    <div class="flex items-center space-x-2 text-xs md:text-sm">
-                        <div id="firebaseStatus" class="firebase-status">
-                            <div class="w-3 h-3 bg-yellow-500 rounded-full firebase-connecting"></div>
-                        </div>
-                        <div>
-                            <div class="text-gray-900 font-medium" id="firebaseStatusText">Connessione Firebase...</div>
-                            <div class="text-gray-500 text-xs" id="firebaseDetails">Inizializzazione</div>
-                        </div>
+                
+                <!-- Mobile Menu Button -->
+                <div class="flex items-center space-x-1 sm:space-x-2 lg:hidden">
+                    <div id="connectionStatus" class="hidden sm:flex items-center space-x-2 px-2 py-1 rounded-full bg-blue-100/50">
+                        <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <span class="text-xs font-medium text-gray-700">Offline</span>
                     </div>
-                    <div class="flex items-center space-x-2 text-xs md:text-sm">
-                        <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                        <span class="text-gray-600">Online: <span id="onlineUsers">1</span> utente</span>
-                    </div>
-                    <button onclick="openAddModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 md:px-4 py-2 rounded-lg flex items-center justify-center space-x-2 text-sm md:text-base w-full md:w-auto">
-                        <span>➕</span>
-                        <span class="hidden sm:inline">Aggiungi Pneumatico</span>
-                        <span class="sm:hidden">Aggiungi</span>
+                    <button onclick="toggleMobileMenu()" class="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
+                        <svg id="mobileMenuIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
                     </button>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden lg:flex items-center space-x-3">
+                    <div id="connectionStatusDesktop" class="flex items-center space-x-2 px-3 py-2 rounded-full bg-blue-100/50">
+                        <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <span class="text-sm font-medium text-gray-700">Modalità Offline</span>
+                    </div>
+                    <button onclick="showGitHubModal()" class="bg-gray-800 hover:bg-gray-900 text-white px-3 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        <span class="hidden xl:inline">GitHub</span>
+                    </button>
+                    <button onclick="exportData()" class="export-btn text-white px-3 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <span class="hidden xl:inline">Esporta</span>
+                    </button>
+                    <button onclick="printToPDF()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        </svg>
+                        <span class="hidden xl:inline">PDF</span>
+                    </button>
+                    <button onclick="showAddModal()" class="btn-primary text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        <span class="hidden xl:inline">Nuovo</span>
+                        <span class="xl:hidden">+</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div id="mobileMenu" class="lg:hidden hidden border-t border-white/20 py-3">
+                <div class="flex flex-col space-y-3">
+                    <div id="connectionStatusMobile" class="flex items-center justify-center space-x-2 px-3 py-2 rounded-full bg-blue-100/50 mx-auto">
+                        <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <span class="text-sm font-medium text-gray-700">Modalità Offline</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button onclick="showGitHubModal(); closeMobileMenu();" class="bg-gray-800 hover:bg-gray-900 text-white px-3 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center space-x-2 text-sm">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                            </svg>
+                            <span>GitHub</span>
+                        </button>
+                        <button onclick="exportData(); closeMobileMenu();" class="export-btn text-white px-3 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center space-x-2 text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span>Esporta</span>
+                        </button>
+                        <button onclick="printToPDF(); closeMobileMenu();" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center space-x-2 text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                            </svg>
+                            <span>PDF</span>
+                        </button>
+                        <button onclick="showAddModal(); closeMobileMenu();" class="btn-primary text-white px-3 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center space-x-2 text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            <span>Nuovo</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Firebase Connection Alert -->
-    <div id="firebaseAlert" class="hidden bg-blue-50 border-l-4 border-blue-400 p-4">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <span class="text-blue-400 text-xl">🔥</span>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm text-blue-700">
-                        <span class="font-medium">Firebase connesso!</span>
-                        I tuoi dati sono sincronizzati in tempo reale e accessibili da qualsiasi dispositivo.
-                        <a href="#" onclick="showFirebaseInfo()" class="underline hover:text-blue-900">Scopri di più</a>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats Cards -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-2 bg-blue-100 rounded-lg">
-                        <span class="text-blue-600 text-xl">📦</span>
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <!-- Stats Dashboard -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+            <div class="stat-card rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex-1">
+                        <p class="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide">Totale</p>
+                        <p id="totalTires" class="text-xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">0</p>
+                        <p class="text-xs text-gray-500 mt-1 hidden sm:block">Inventario completo</p>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Totale Pneumatici</p>
-                        <p class="text-2xl font-bold text-gray-900" id="totalTires">0</p>
+                    <div class="p-2 sm:p-3 bg-blue-100 rounded-full mt-2 sm:mt-0 self-end sm:self-auto">
+                        <svg class="w-5 h-5 sm:w-8 sm:h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        </svg>
                     </div>
                 </div>
             </div>
             
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-2 bg-green-100 rounded-lg">
-                        <span class="text-green-600 text-xl">✅</span>
+            <div class="stat-card rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex-1">
+                        <p class="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide">Disponibili</p>
+                        <p id="availableTires" class="text-xl sm:text-3xl font-bold text-green-600 mt-1 sm:mt-2">0</p>
+                        <p class="text-xs text-gray-500 mt-1 hidden sm:block">Pronti per vendita</p>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Disponibili</p>
-                        <p class="text-2xl font-bold text-gray-900" id="availableTires">0</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-2 bg-yellow-100 rounded-lg">
-                        <span class="text-yellow-600 text-xl">⚠️</span>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Scorte Basse</p>
-                        <p class="text-2xl font-bold text-gray-900" id="lowStockTires">0</p>
+                    <div class="p-2 sm:p-3 bg-green-100 rounded-full mt-2 sm:mt-0 self-end sm:self-auto">
+                        <svg class="w-5 h-5 sm:w-8 sm:h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
                     </div>
                 </div>
             </div>
             
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-2 bg-purple-100 rounded-lg">
-                        <span class="text-purple-600 text-xl">🏷️</span>
+            <div class="stat-card rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex-1">
+                        <p class="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide">Scorte Basse</p>
+                        <p id="lowStockTires" class="text-xl sm:text-3xl font-bold text-yellow-600 mt-1 sm:mt-2">0</p>
+                        <p class="text-xs text-gray-500 mt-1 hidden sm:block">Riordino necessario</p>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Marche</p>
-                        <p class="text-2xl font-bold text-gray-900" id="totalBrands">0</p>
+                    <div class="p-2 sm:p-3 bg-yellow-100 rounded-full mt-2 sm:mt-0 self-end sm:self-auto">
+                        <svg class="w-5 h-5 sm:w-8 sm:h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex-1">
+                        <p class="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide">Valore Totale</p>
+                        <p id="totalValue" class="text-xl sm:text-3xl font-bold text-purple-600 mt-1 sm:mt-2">€0</p>
+                        <p class="text-xs text-gray-500 mt-1 hidden sm:block">Inventario valutato</p>
+                    </div>
+                    <div class="p-2 sm:p-3 bg-purple-100 rounded-full mt-2 sm:mt-0 self-end sm:self-auto">
+                        <svg class="w-5 h-5 sm:w-8 sm:h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Filters -->
-        <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Filtri di Ricerca</h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Marca</label>
-                    <select id="filterBrand" onchange="filterTires()" class="w-full p-3 border border-gray-300 rounded-lg">
-                        <option value="">Tutte le marche</option>
-                        <option value="Michelin">Michelin</option>
-                        <option value="Riken">Riken</option>
-                        <option value="Falken">Falken</option>
-                        <option value="Sailun">Sailun</option>
-                        <option value="Continental">Continental</option>
-                        <option value="Pirelli">Pirelli</option>
-                        <option value="Bridgestone">Bridgestone</option>
-                        <option value="Goodyear">Goodyear</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Stagione</label>
-                    <select id="filterSeason" onchange="filterTires()" class="w-full p-3 border border-gray-300 rounded-lg">
-                        <option value="">Tutte le stagioni</option>
-                        <option value="Estive">Estive</option>
-                        <option value="Invernali">Invernali</option>
-                        <option value="Quattro Stagioni">Quattro Stagioni</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Misura</label>
-                    <input type="text" id="filterSize" onkeyup="filterTires()" placeholder="es. 205/55R16" class="w-full p-3 border border-gray-300 rounded-lg">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Ricerca</label>
-                    <input type="text" id="searchInput" onkeyup="filterTires()" placeholder="Cerca per modello..." class="w-full p-3 border border-gray-300 rounded-lg">
-                </div>
-            </div>
-        </div>
-
-        <!-- Free Hosting Info -->
-        <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg shadow p-6 mb-6 border border-green-200">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="p-2 bg-green-100 rounded-lg">
-                        <span class="text-green-600 text-xl">🆓</span>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900">Hosting Gratuito Attivo</h3>
-                        <p class="text-sm text-gray-600">
-                            <span class="font-medium text-green-600">GitHub Pages</span> + 
-                            <span class="font-medium text-blue-600">Firebase</span> - 
-                            Sempre online, sempre gratis!
-                        </p>
-                    </div>
-                </div>
+        <!-- Advanced Filters -->
+        <div class="glass-effect rounded-lg sm:rounded-xl shadow-lg mb-6 sm:mb-8 p-4 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+                <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-0">Filtri Avanzati</h3>
                 <div class="flex space-x-2">
-                    <button onclick="showDeploymentGuide()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm">
-                        📚 Guida Deploy
+                    <button onclick="applyFilters()" class="btn-primary text-white px-3 sm:px-4 py-2 rounded-lg font-medium text-sm flex-1 sm:flex-none">
+                        Applica
                     </button>
-                    <button onclick="shareApp()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm">
-                        🔗 Condividi App
+                    <button onclick="clearFilters()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-3 sm:px-4 py-2 rounded-lg font-medium text-sm transition-colors flex-1 sm:flex-none">
+                        Reset
                     </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+                <div>
+                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">🏷️ Marca</label>
+                    <select id="brandFilter" class="search-input w-full rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm">
+                        <option value="">Tutte le marche</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">🌡️ Stagione</label>
+                    <select id="seasonFilter" class="search-input w-full rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm">
+                        <option value="">Tutte le stagioni</option>
+                        <option value="estive">🌞 Estive</option>
+                        <option value="invernali">❄️ Invernali</option>
+                        <option value="quattro-stagioni">🔄 Quattro Stagioni</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">📏 Misura</label>
+                    <select id="sizeFilter" class="search-input w-full rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm">
+                        <option value="">Tutte le misure</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">📊 Stock</label>
+                    <select id="stockFilter" class="search-input w-full rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm">
+                        <option value="">Tutti</option>
+                        <option value="available">Disponibili</option>
+                        <option value="low">Scorte basse</option>
+                        <option value="out">Esauriti</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-2 lg:col-span-1">
+                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">🔍 Ricerca</label>
+                    <input type="text" id="searchFilter" placeholder="Cerca pneumatici..." class="search-input w-full rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm">
                 </div>
             </div>
         </div>
 
-        <!-- Activity Log -->
-        <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Attività Recenti</h3>
-                <div class="flex items-center space-x-2">
-                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span class="text-sm text-gray-600">Sync in tempo reale</span>
-                </div>
-            </div>
-            <div id="activityLog" class="space-y-3 max-h-48 overflow-y-auto">
-                <!-- Activity items will be populated here -->
-            </div>
-        </div>
-
-        <!-- Inventory Table -->
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-            <div class="px-4 md:px-6 py-4 border-b border-gray-200">
-                <div class="flex flex-col md:flex-row md:justify-between md:items-center space-y-2 md:space-y-0">
-                    <h3 class="text-lg font-semibold text-gray-900">Inventario Pneumatici</h3>
-                    <div class="flex items-center space-x-4">
-                        <div class="flex items-center space-x-2 text-xs md:text-sm">
-                            <span class="text-gray-500">Ultimo sync:</span>
-                            <span class="font-medium text-green-600" id="lastSync">ora</span>
+        <!-- Tire Inventory -->
+        <div class="glass-effect rounded-lg sm:rounded-xl shadow-lg">
+            <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-white/20">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-0">Inventario Pneumatici</h3>
+                    <div class="flex items-center justify-between sm:justify-end sm:space-x-4">
+                        <span id="resultsCount" class="text-sm text-gray-600">0 risultati</span>
+                        <div class="flex space-x-1 sm:space-x-2">
+                            <button onclick="toggleView('grid')" id="gridViewBtn" class="p-2 rounded-lg bg-blue-100 text-blue-600">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                                </svg>
+                            </button>
+                            <button onclick="toggleView('list')" id="listViewBtn" class="p-2 rounded-lg bg-gray-100 text-gray-600">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                </svg>
+                            </button>
                         </div>
-                        <button onclick="manualSync()" class="flex items-center space-x-1 px-3 py-1 text-blue-600 hover:text-blue-800 border border-blue-200 rounded-lg hover:bg-blue-50 text-sm">
-                            <span id="syncIcon">🔄</span>
-                            <span>Sync</span>
-                        </button>
                     </div>
                 </div>
             </div>
             
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marca</th>
-                            <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modello</th>
-                            <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Misura</th>
-                            <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stagione</th>
-                            <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Velocità</th>
-                            <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantità</th>
-                            <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prezzo</th>
-                            <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Azioni</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tiresTableBody" class="bg-white divide-y divide-gray-200">
-                        <!-- Tire entries will be populated here -->
-                    </tbody>
-                </table>
+            <div id="loadingIndicator" class="flex justify-center items-center py-12">
+                <div class="loading"></div>
+                <span class="ml-3 text-gray-600 font-medium">Caricamento inventario...</span>
+            </div>
+            
+            <div id="tiresList" class="p-6" style="display: none;">
+                <!-- Tire items will be populated here -->
+            </div>
+            
+            <div id="emptyState" class="text-center py-16" style="display: none;">
+                <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <svg class="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4m0 0l-4-4m4 4V3"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Nessun pneumatico trovato</h3>
+                <p class="text-gray-600 mb-6">Inizia aggiungendo il tuo primo pneumatico all'inventario.</p>
+                <button onclick="showAddModal()" class="btn-primary text-white px-6 py-3 rounded-lg font-medium">
+                    Aggiungi Primo Pneumatico
+                </button>
             </div>
         </div>
-    </div>
+    </main>
 
     <!-- Add/Edit Modal -->
     <div id="tireModal" class="modal">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="modalTitle" class="text-xl font-bold text-gray-900">Aggiungi Pneumatico</h2>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+        <div class="flex items-end sm:items-center justify-center min-h-screen pt-4 px-2 sm:px-4 pb-4 sm:pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" onclick="closeModal()">
+                <div class="absolute inset-0 bg-gray-900 opacity-75"></div>
             </div>
-            
-            <form id="tireForm" onsubmit="saveTire(event)">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Marca *</label>
-                        <select id="brand" required class="w-full p-3 border border-gray-300 rounded-lg">
-                            <option value="">Seleziona marca</option>
-                            <option value="Michelin">Michelin</option>
-                            <option value="Riken">Riken</option>
-                            <option value="Falken">Falken</option>
-                            <option value="Sailun">Sailun</option>
-                            <option value="Continental">Continental</option>
-                            <option value="Pirelli">Pirelli</option>
-                            <option value="Bridgestone">Bridgestone</option>
-                            <option value="Goodyear">Goodyear</option>
-                        </select>
+            <div class="inline-block align-bottom sm:align-middle glass-effect rounded-t-xl sm:rounded-xl text-left overflow-hidden shadow-2xl transform transition-all w-full sm:my-8 sm:max-w-2xl sm:w-full max-h-[90vh] sm:max-h-none overflow-y-auto">
+                <div class="px-4 sm:px-6 pt-4 sm:pt-6 pb-4">
+                    <div class="flex items-center justify-between mb-4 sm:mb-6">
+                        <h3 id="modalTitle" class="text-lg sm:text-2xl font-bold text-gray-900">Aggiungi Pneumatico</h3>
+                        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors p-1">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Modello *</label>
-                        <input type="text" id="model" required placeholder="es. Pilot Sport 4" class="w-full p-3 border border-gray-300 rounded-lg">
-                    </div>
+                    <form id="tireForm" class="space-y-4 sm:space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                            <div>
+                                <label class="block text-xs sm:text-sm font-bold text-gray-700 mb-2">🏷️ Marca</label>
+                                <select id="brand" required class="search-input w-full rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm" onchange="handleBrandChange()">
+                                    <option value="">Seleziona marca</option>
+                                    <option value="michelin">Michelin</option>
+                                    <option value="riken">Riken</option>
+                                    <option value="falken">Falken</option>
+                                    <option value="sailun">Sailun</option>
+                                    <option value="continental">Continental</option>
+                                    <option value="pirelli">Pirelli</option>
+                                    <option value="bridgestone">Bridgestone</option>
+                                    <option value="goodyear">Goodyear</option>
+                                    <option value="dunlop">Dunlop</option>
+                                    <option value="yokohama">Yokohama</option>
+                                    <option value="custom">➕ Aggiungi nuova marca...</option>
+                                </select>
+                                <input type="text" id="customBrand" placeholder="Inserisci nome marca..." class="search-input w-full rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm mt-2" style="display: none;">
+                            </div>
+                            <div>
+                                <label class="block text-xs sm:text-sm font-bold text-gray-700 mb-2">📝 Modello</label>
+                                <input type="text" id="model" required class="search-input w-full rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm" placeholder="Es. Pilot Sport 4">
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-3 sm:gap-4">
+                            <div>
+                                <label class="block text-xs sm:text-sm font-bold text-gray-700 mb-2">📐 Larghezza</label>
+                                <input type="number" id="width" required class="search-input w-full rounded-lg px-2 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm" placeholder="225">
+                            </div>
+                            <div>
+                                <label class="block text-xs sm:text-sm font-bold text-gray-700 mb-2">📏 Altezza</label>
+                                <input type="number" id="height" required class="search-input w-full rounded-lg px-2 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm" placeholder="45">
+                            </div>
+                            <div>
+                                <label class="block text-xs sm:text-sm font-bold text-gray-700 mb-2">⭕ Diametro</label>
+                                <input type="number" id="diameter" required class="search-input w-full rounded-lg px-2 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm" placeholder="17">
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                            <div>
+                                <label class="block text-xs sm:text-sm font-bold text-gray-700 mb-2">🌡️ Stagione</label>
+                                <select id="season" required class="search-input w-full rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm">
+                                    <option value="">Seleziona stagione</option>
+                                    <option value="estive">🌞 Estive</option>
+                                    <option value="invernali">❄️ Invernali</option>
+                                    <option value="quattro-stagioni">🔄 Quattro Stagioni</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs sm:text-sm font-bold text-gray-700 mb-2">⚡ Codice Velocità</label>
+                                <select id="speedCode" required class="search-input w-full rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm" onchange="handleSpeedCodeChange()">
+                                    <option value="">Seleziona codice</option>
+                                    <option value="H">H (210 km/h)</option>
+                                    <option value="V">V (240 km/h)</option>
+                                    <option value="W">W (270 km/h)</option>
+                                    <option value="Y">Y (300 km/h)</option>
+                                    <option value="T">T (190 km/h)</option>
+                                    <option value="S">S (180 km/h)</option>
+                                    <option value="C">🚐 C (Furgoni/Commercial)</option>
+                                    <option value="custom">➕ Aggiungi nuovo codice...</option>
+                                </select>
+                                <input type="text" id="customSpeedCode" placeholder="Es. Z (300+ km/h)" class="search-input w-full rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm mt-2" style="display: none;">
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                            <div>
+                                <label class="block text-xs sm:text-sm font-bold text-gray-700 mb-2">📦 Quantità</label>
+                                <input type="number" id="quantity" required min="0" class="search-input w-full rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm" placeholder="4">
+                            </div>
+                            <div>
+                                <label class="block text-xs sm:text-sm font-bold text-gray-700 mb-2">💰 Prezzo (€)</label>
+                                <input type="number" id="price" step="0.01" min="0" class="search-input w-full rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm" placeholder="150.00">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs sm:text-sm font-bold text-gray-700 mb-2">📋 Note</label>
+                            <textarea id="notes" rows="3" class="search-input w-full rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:outline-none text-sm resize-none" placeholder="Note aggiuntive..."></textarea>
+                        </div>
+                    </form>
                 </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Larghezza *</label>
-                        <input type="number" id="width" required placeholder="205" min="125" max="355" class="w-full p-3 border border-gray-300 rounded-lg">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Altezza *</label>
-                        <input type="number" id="height" required placeholder="55" min="25" max="85" class="w-full p-3 border border-gray-300 rounded-lg">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Diametro *</label>
-                        <input type="number" id="diameter" required placeholder="16" min="13" max="24" class="w-full p-3 border border-gray-300 rounded-lg">
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Stagione *</label>
-                        <select id="season" required class="w-full p-3 border border-gray-300 rounded-lg">
-                            <option value="">Seleziona stagione</option>
-                            <option value="Estive">Estive</option>
-                            <option value="Invernali">Invernali</option>
-                            <option value="Quattro Stagioni">Quattro Stagioni</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Codice Velocità *</label>
-                        <select id="speedCode" required class="w-full p-3 border border-gray-300 rounded-lg">
-                            <option value="">Seleziona codice</option>
-                            <option value="H">H (210 km/h)</option>
-                            <option value="V">V (240 km/h)</option>
-                            <option value="W">W (270 km/h)</option>
-                            <option value="Y">Y (300 km/h)</option>
-                            <option value="T">T (190 km/h)</option>
-                            <option value="S">S (180 km/h)</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Quantità *</label>
-                        <input type="number" id="quantity" required placeholder="4" min="0" class="w-full p-3 border border-gray-300 rounded-lg">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Prezzo (€) *</label>
-                        <input type="number" id="price" required placeholder="120.00" step="0.01" min="0" class="w-full p-3 border border-gray-300 rounded-lg">
-                    </div>
-                </div>
-                
-                <div class="flex justify-end space-x-3">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                <div class="bg-gray-50/80 px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+                    <button type="button" onclick="closeModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base order-2 sm:order-1">
                         Annulla
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <button type="button" onclick="saveTire()" class="btn-primary text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base order-1 sm:order-2">
                         Salva Pneumatico
                     </button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
-    <!-- Notification Area -->
-    <div id="notificationArea" class="fixed top-4 right-4 z-50 space-y-2">
-        <!-- Notifications will appear here -->
-    </div>
+    <!-- GitHub Modal -->
+    <div id="githubModal" class="modal">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" onclick="closeGitHubModal()">
+                <div class="absolute inset-0 bg-gray-900 opacity-75"></div>
+            </div>
+            <div class="inline-block align-bottom glass-effect rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                <div class="px-6 pt-6 pb-4">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-900">GitHub Integration</h3>
+                        </div>
+                        <button onclick="closeGitHubModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <!-- Status Connessione -->
+                        <div class="github-status bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4">
+                            <div class="flex items-center space-x-3 mb-3">
+                                <div class="status-dot w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                <h4 class="text-lg font-semibold text-gray-800">Stato Connessione</h4>
+                            </div>
+                            <div class="ml-6">
+                                <p class="status-text text-sm text-gray-600 font-medium">Connesso a pizza0579-del/VERO</p>
+                                <p class="text-xs text-gray-500 mt-1">Repository configurato e pronto per la sincronizzazione</p>
+                            </div>
+                        </div>
 
-    <!-- GitHub Pages Deployment Badge -->
-    <div class="deployment-badge">
-        <div class="flex items-center space-x-2">
-            <span>🚀</span>
-            <span>Hosted on GitHub Pages</span>
+                        <!-- Configurazione GitHub -->
+                        <div class="space-y-4">
+                            <h4 class="text-lg font-semibold text-gray-800">🔧 Configurazione Repository</h4>
+                            
+                            <div class="grid grid-cols-1 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">🔑 Personal Access Token</label>
+                                    <input type="password" id="githubToken" class="search-input w-full rounded-lg px-4 py-3 focus:outline-none text-sm" placeholder="ghp_xxxxxxxxxxxxxxxxxx">
+                                    <p class="text-xs text-gray-500 mt-1">Token con permessi "repo" per accedere al repository</p>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">👤 Owner/Username</label>
+                                        <input type="text" id="githubOwner" class="search-input w-full rounded-lg px-4 py-3 focus:outline-none text-sm" placeholder="pizza0579-del">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">📁 Repository</label>
+                                        <input type="text" id="githubRepo" class="search-input w-full rounded-lg px-4 py-3 focus:outline-none text-sm" placeholder="VERO">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex space-x-3">
+                                <button onclick="saveGitHubConfig()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span>Salva Configurazione</span>
+                                </button>
+                                <button onclick="testGitHubConnection()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>Test Connessione</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Funzionalità -->
+                        <div class="space-y-4">
+                            <h4 class="text-lg font-semibold text-gray-800">🚀 Funzionalità Disponibili</h4>
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
+                                    <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-800">Salvataggio Cloud</p>
+                                        <p class="text-sm text-gray-600">Carica i dati sul repository GitHub con commit automatici</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start space-x-3 p-3 bg-green-50 rounded-lg">
+                                    <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 12l2 2 4-4"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-800">Sincronizzazione Multi-Device</p>
+                                        <p class="text-sm text-gray-600">Accedi ai dati da qualsiasi dispositivo connesso</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start space-x-3 p-3 bg-purple-50 rounded-lg">
+                                    <div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-800">Cronologia Versioni</p>
+                                        <p class="text-sm text-gray-600">Tracciamento completo tramite Git history</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div class="flex items-start space-x-3">
+                                <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div>
+                                    <p class="text-sm font-medium text-yellow-800">Sistema Triplo Backup</p>
+                                    <p class="text-xs text-yellow-700 mt-1">I dati sono protetti su Firebase (primario), GitHub (cloud backup) e localStorage (backup locale). Massima sicurezza garantita!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50/80 px-6 py-4 flex flex-wrap justify-between items-center gap-3">
+                    <div class="flex space-x-2">
+                        <button onclick="syncWithGitHub()" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            <span>Salva su GitHub</span>
+                        </button>
+                        <button onclick="loadFromGitHub()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 12l2 2 4-4"></path>
+                            </svg>
+                            <span>Carica da GitHub</span>
+                        </button>
+                    </div>
+                    <button onclick="closeGitHubModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
+                        Chiudi
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        let tires = [];
-        let editingIndex = -1;
-        let activityLog = [];
-        let firebaseConnected = false;
-        let currentUser = null;
+        let tiresData = [];
+        let filteredTires = [];
+        let currentEditId = null;
+        let isAuthenticated = false;
+        let currentView = 'grid';
 
-        // Firebase connection management
-        async function initializeFirebase() {
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carica configurazione GitHub
+            loadGitHubConfig();
+            
+            // Attendi che Firebase sia pronto
+            if (window.firebaseReady) {
+                initializeApp();
+            } else {
+                // Ascolta per quando Firebase è pronto
+                window.addEventListener('firebaseReady', initializeApp);
+                window.addEventListener('firebaseError', () => {
+                    console.log('🔄 Modalità offline attivata');
+                    updateConnectionStatus(false);
+                    loadLocalData();
+                });
+                
+                // Timeout di sicurezza per modalità offline
+                setTimeout(() => {
+                    if (!window.firebaseReady) {
+                        console.log('⏰ Timeout Firebase - modalità offline');
+                        updateConnectionStatus(false);
+                        loadLocalData();
+                    }
+                }, 5000);
+            }
+            
+            // Avvia auto-sync GitHub
+            startGitHubAutoSync();
+        });
+
+        function initializeApp() {
+            if (window.firebaseReady) {
+                console.log('🔥 Inizializzazione con Firebase');
+                updateConnectionStatus(true);
+                loadTires();
+            } else {
+                console.log('💾 Inizializzazione offline');
+                updateConnectionStatus(false);
+                loadLocalData();
+            }
+            
+            // Carica marche e codici personalizzati salvati
+            loadCustomOptions();
+        }
+
+        function loadCustomOptions() {
+            // Carica marche personalizzate
+            const customBrands = JSON.parse(localStorage.getItem('customBrands') || '{}');
+            const brandSelect = document.getElementById('brand');
+            const brandFilter = document.getElementById('brandFilter');
+            
+            Object.entries(customBrands).forEach(([value, display]) => {
+                // Aggiungi al select del form
+                const newOption = document.createElement('option');
+                newOption.value = value;
+                newOption.textContent = display;
+                brandSelect.insertBefore(newOption, brandSelect.lastElementChild);
+                
+                // Aggiungi al filtro
+                const filterOption = document.createElement('option');
+                filterOption.value = value;
+                filterOption.textContent = display;
+                brandFilter.appendChild(filterOption);
+            });
+            
+            // Carica codici velocità personalizzati
+            const customSpeedCodes = JSON.parse(localStorage.getItem('customSpeedCodes') || '[]');
+            const speedCodeSelect = document.getElementById('speedCode');
+            
+            customSpeedCodes.forEach(code => {
+                const newOption = document.createElement('option');
+                newOption.value = code;
+                newOption.textContent = `${code} (Personalizzato)`;
+                speedCodeSelect.insertBefore(newOption, speedCodeSelect.lastElementChild);
+            });
+        }
+
+        function updateConnectionStatus(connected) {
+            // Update all connection status elements
+            const statusElements = [
+                document.getElementById('connectionStatus'),
+                document.getElementById('connectionStatusDesktop'),
+                document.getElementById('connectionStatusMobile')
+            ];
+            
+            statusElements.forEach(statusElement => {
+                if (!statusElement) return;
+                
+                const dot = statusElement.querySelector('.w-2');
+                const text = statusElement.querySelector('span');
+                
+                if (connected) {
+                    dot.className = 'w-2 h-2 bg-green-400 rounded-full animate-pulse';
+                    text.textContent = statusElement.id === 'connectionStatus' ? 'Online' : 
+                                     statusElement.id === 'connectionStatusMobile' ? 'Firebase Connesso' : 'Firebase Connesso';
+                    statusElement.className = statusElement.className.replace('bg-blue-100/50', 'bg-green-100/50');
+                } else {
+                    dot.className = 'w-2 h-2 bg-blue-400 rounded-full';
+                    text.textContent = statusElement.id === 'connectionStatus' ? 'Offline' : 'Modalità Offline';
+                    statusElement.className = statusElement.className.replace('bg-green-100/50', 'bg-blue-100/50');
+                }
+            });
+        }
+
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuIcon = document.getElementById('mobileMenuIcon');
+            
+            if (mobileMenu.classList.contains('hidden')) {
+                mobileMenu.classList.remove('hidden');
+                menuIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+            } else {
+                mobileMenu.classList.add('hidden');
+                menuIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>';
+            }
+        }
+
+        function closeMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuIcon = document.getElementById('mobileMenuIcon');
+            
+            mobileMenu.classList.add('hidden');
+            menuIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>';
+        }
+
+        function loadTires() {
+            if (window.firebaseReady) {
+                loadFromFirebase();
+            } else {
+                loadLocalData();
+            }
+        }
+
+        function loadFromFirebase() {
             try {
-                updateFirebaseStatus('connecting', 'Connessione Firebase...', 'Autenticazione in corso');
+                const { ref, onValue } = window.firebaseRefs;
+                const tiresRef = ref(window.firebaseDB, 'tires');
                 
-                // Authenticate anonymously
-                const user = await window.authFunctions.signInAnonymously(window.firebaseAuth);
-                currentUser = user.user;
-                
-                // Set up real-time listeners
-                setupFirebaseListeners();
-                
-                // Load existing data
-                await loadDataFromFirebase();
-                
-                firebaseConnected = true;
-                updateFirebaseStatus('connected', 'Firebase Connesso', 'Sincronizzazione in tempo reale attiva');
-                showFirebaseAlert();
-                showNotification('🔥 Firebase connesso! Dati sincronizzati in tempo reale', 'success');
+                onValue(tiresRef, (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        tiresData = Object.keys(data).map(key => ({
+                            id: key,
+                            ...data[key]
+                        }));
+                        
+                        // Sincronizza con localStorage come backup
+                        localStorage.setItem('tiresData', JSON.stringify(tiresData));
+                    } else {
+                        // Se Firebase è vuoto, carica dati locali o di esempio
+                        const localData = localStorage.getItem('tiresData');
+                        if (localData) {
+                            tiresData = JSON.parse(localData);
+                            // Sincronizza i dati locali con Firebase
+                            syncLocalToFirebase();
+                        } else {
+                            loadSampleData();
+                            syncLocalToFirebase();
+                        }
+                    }
+                    
+                    filteredTires = [...tiresData];
+                    updateStats();
+                    updateFilters();
+                    renderTires();
+                    hideLoading();
+                    
+                    showNotification('🔥 Dati sincronizzati con Firebase!', 'success');
+                }, (error) => {
+                    console.error('Errore lettura Firebase:', error);
+                    loadLocalData();
+                    showNotification('⚠️ Errore Firebase - modalità offline attivata', 'error');
+                });
                 
             } catch (error) {
                 console.error('Errore Firebase:', error);
-                updateFirebaseStatus('error', 'Errore Firebase', 'Modalità offline attiva');
-                showNotification('⚠️ Modalità offline - I dati saranno salvati localmente', 'warning');
-                loadFromLocalStorage();
+                loadLocalData();
             }
         }
 
-        function updateFirebaseStatus(status, message, details) {
-            const statusElement = document.getElementById('firebaseStatus');
-            const textElement = document.getElementById('firebaseStatusText');
-            const detailsElement = document.getElementById('firebaseDetails');
+        function syncLocalToFirebase() {
+            if (!window.firebaseReady) return;
             
-            statusElement.className = 'firebase-status';
-            
-            switch(status) {
-                case 'connected':
-                    statusElement.innerHTML = '<div class="w-3 h-3 bg-green-500 rounded-full firebase-connected"></div>';
-                    statusElement.classList.add('firebase-connected');
-                    textElement.textContent = message;
-                    detailsElement.textContent = details;
-                    break;
-                    
-                case 'connecting':
-                    statusElement.innerHTML = '<div class="w-3 h-3 bg-yellow-500 rounded-full firebase-connecting"></div>';
-                    statusElement.classList.add('firebase-connecting');
-                    textElement.textContent = message;
-                    detailsElement.textContent = details;
-                    break;
-                    
-                case 'error':
-                    statusElement.innerHTML = '<div class="w-3 h-3 bg-red-500 rounded-full firebase-error"></div>';
-                    statusElement.classList.add('firebase-error');
-                    textElement.textContent = message;
-                    detailsElement.textContent = details;
-                    break;
-            }
-        }
-
-        function showFirebaseAlert() {
-            document.getElementById('firebaseAlert').classList.remove('hidden');
-        }
-
-        function setupFirebaseListeners() {
-            // Listen for tire changes
-            const tiresRef = window.firebaseRefs.ref(window.firebaseDB, 'tires');
-            window.firebaseRefs.onValue(tiresRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    syncTiresFromFirebase(data);
-                }
-            });
-
-            // Listen for activity changes
-            const activityRef = window.firebaseRefs.ref(window.firebaseDB, 'activity');
-            window.firebaseRefs.onValue(activityRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    syncActivityFromFirebase(data);
-                }
-            });
-        }
-
-        async function loadDataFromFirebase() {
             try {
-                // Load tires
-                const tiresSnapshot = await window.firebaseRefs.get(window.firebaseRefs.ref(window.firebaseDB, 'tires'));
-                if (tiresSnapshot.exists()) {
-                    const tiresData = tiresSnapshot.val();
-                    tires = Object.values(tiresData).map(tire => ({
-                        ...tire,
-                        lastModified: new Date(tire.lastModified)
-                    }));
-                }
-
-                // Load activity
-                const activitySnapshot = await window.firebaseRefs.get(window.firebaseRefs.ref(window.firebaseDB, 'activity'));
-                if (activitySnapshot.exists()) {
-                    const activityData = activitySnapshot.val();
-                    activityLog = Object.values(activityData)
-                        .map(activity => ({
-                            ...activity,
-                            timestamp: new Date(activity.timestamp)
-                        }))
-                        .sort((a, b) => b.timestamp - a.timestamp)
-                        .slice(0, 50);
-                }
-
-                updateDisplay();
-                updateActivityLog();
+                const { ref, set } = window.firebaseRefs;
+                const tiresRef = ref(window.firebaseDB, 'tires');
+                
+                const firebaseData = {};
+                tiresData.forEach(tire => {
+                    const id = tire.id.startsWith('local_') ? tire.id.replace('local_', 'sync_') : tire.id;
+                    firebaseData[id] = { ...tire };
+                    delete firebaseData[id].id;
+                });
+                
+                set(tiresRef, firebaseData).then(() => {
+                    console.log('✅ Dati locali sincronizzati con Firebase');
+                }).catch(error => {
+                    console.error('❌ Errore sincronizzazione:', error);
+                });
                 
             } catch (error) {
-                console.error('Errore caricamento da Firebase:', error);
-                loadFromLocalStorage();
+                console.error('Errore sincronizzazione:', error);
             }
         }
-
-        function syncTiresFromFirebase(firebaseData) {
-            let hasChanges = false;
-            const newTires = Object.values(firebaseData).map(tire => ({
-                ...tire,
-                lastModified: new Date(tire.lastModified)
-            }));
-
-            // Simple replacement for real-time sync
-            if (JSON.stringify(tires) !== JSON.stringify(newTires)) {
-                tires = newTires;
-                hasChanges = true;
+        
+        function loadLocalData() {
+            const localData = localStorage.getItem('tiresData');
+            
+            if (localData) {
+                try {
+                    tiresData = JSON.parse(localData);
+                    filteredTires = [...tiresData];
+                } catch (error) {
+                    loadSampleData();
+                }
+            } else {
+                loadSampleData();
             }
-
-            if (hasChanges) {
-                updateDisplay();
-                document.getElementById('lastSync').textContent = 'ora';
-            }
+            
+            updateStats();
+            updateFilters();
+            renderTires();
+            hideLoading();
+            updateConnectionStatus(false);
         }
 
-        function syncActivityFromFirebase(firebaseData) {
-            const newActivity = Object.values(firebaseData)
-                .map(activity => ({
-                    ...activity,
-                    timestamp: new Date(activity.timestamp)
-                }))
-                .sort((a, b) => b.timestamp - a.timestamp)
-                .slice(0, 50);
-
-            if (JSON.stringify(activityLog) !== JSON.stringify(newActivity)) {
-                activityLog = newActivity;
-                updateActivityLog();
-            }
+        function loadSampleData() {
+            tiresData = [
+                {
+                    id: 'sample1',
+                    brand: 'michelin',
+                    model: 'Pilot Sport 4',
+                    width: 225,
+                    height: 45,
+                    diameter: 17,
+                    season: 'estive',
+                    speedCode: 'W',
+                    quantity: 8,
+                    price: 165.00,
+                    notes: 'Pneumatico sportivo ad alte prestazioni'
+                },
+                {
+                    id: 'sample2',
+                    brand: 'continental',
+                    model: 'WinterContact TS 860',
+                    width: 205,
+                    height: 55,
+                    diameter: 16,
+                    season: 'invernali',
+                    speedCode: 'H',
+                    quantity: 2,
+                    price: 120.00,
+                    notes: 'Scorte basse - riordino necessario'
+                },
+                {
+                    id: 'sample3',
+                    brand: 'pirelli',
+                    model: 'Cinturato All Season SF2',
+                    width: 195,
+                    height: 65,
+                    diameter: 15,
+                    season: 'quattro-stagioni',
+                    speedCode: 'V',
+                    quantity: 12,
+                    price: 95.00,
+                    notes: 'Ottimo rapporto qualità-prezzo'
+                },
+                {
+                    id: 'sample4',
+                    brand: 'bridgestone',
+                    model: 'Turanza T005',
+                    width: 215,
+                    height: 60,
+                    diameter: 16,
+                    season: 'estive',
+                    speedCode: 'H',
+                    quantity: 0,
+                    price: 110.00,
+                    notes: 'Esaurito - in attesa di rifornimento'
+                },
+                {
+                    id: 'sample5',
+                    brand: 'goodyear',
+                    model: 'EfficientGrip Performance',
+                    width: 235,
+                    height: 40,
+                    diameter: 18,
+                    season: 'estive',
+                    speedCode: 'Y',
+                    quantity: 6,
+                    price: 180.00,
+                    notes: 'Pneumatico premium per auto sportive'
+                },
+                {
+                    id: 'sample6',
+                    brand: 'continental',
+                    model: 'VanContact 100',
+                    width: 215,
+                    height: 75,
+                    diameter: 16,
+                    season: 'estive',
+                    speedCode: 'C',
+                    quantity: 4,
+                    price: 140.00,
+                    notes: 'Pneumatico commerciale per furgoni'
+                }
+            ];
+            filteredTires = [...tiresData];
         }
 
-        async function saveToFirebase(path, data) {
-            if (!firebaseConnected) {
-                saveToLocalStorage();
+        function hideLoading() {
+            document.getElementById('loadingIndicator').style.display = 'none';
+            document.getElementById('tiresList').style.display = 'block';
+        }
+
+        function updateStats() {
+            const total = tiresData.length;
+            const available = tiresData.filter(tire => tire.quantity > 0).length;
+            const lowStock = tiresData.filter(tire => tire.quantity <= 2 && tire.quantity > 0).length;
+            const totalValue = tiresData.reduce((sum, tire) => sum + (tire.price * tire.quantity || 0), 0);
+
+            document.getElementById('totalTires').textContent = total;
+            document.getElementById('availableTires').textContent = available;
+            document.getElementById('lowStockTires').textContent = lowStock;
+            document.getElementById('totalValue').textContent = `€${totalValue.toLocaleString('it-IT', {minimumFractionDigits: 2})}`;
+        }
+
+        function updateFilters() {
+            const brandFilter = document.getElementById('brandFilter');
+            const sizeFilter = document.getElementById('sizeFilter');
+            
+            const brands = [...new Set(tiresData.map(tire => tire.brand))].sort();
+            brandFilter.innerHTML = '<option value="">Tutte le marche</option>';
+            brands.forEach(brand => {
+                const option = document.createElement('option');
+                option.value = brand;
+                option.textContent = brand.charAt(0).toUpperCase() + brand.slice(1);
+                brandFilter.appendChild(option);
+            });
+            
+            const sizes = [...new Set(tiresData.map(tire => `${tire.width}/${tire.height}R${tire.diameter}`))].sort();
+            sizeFilter.innerHTML = '<option value="">Tutte le misure</option>';
+            sizes.forEach(size => {
+                const option = document.createElement('option');
+                option.value = size;
+                option.textContent = size;
+                sizeFilter.appendChild(option);
+            });
+        }
+
+        function renderTires() {
+            const container = document.getElementById('tiresList');
+            const emptyState = document.getElementById('emptyState');
+            const resultsCount = document.getElementById('resultsCount');
+            
+            resultsCount.textContent = `${filteredTires.length} risultati`;
+            
+            if (filteredTires.length === 0) {
+                container.style.display = 'none';
+                emptyState.style.display = 'block';
                 return;
             }
-
-            try {
-                await window.firebaseRefs.set(window.firebaseRefs.ref(window.firebaseDB, path), data);
-                document.getElementById('lastSync').textContent = 'ora';
-            } catch (error) {
-                console.error('Errore salvataggio Firebase:', error);
-                showNotification('⚠️ Errore sincronizzazione - Salvato localmente', 'warning');
-                saveToLocalStorage();
+            
+            container.style.display = 'block';
+            emptyState.style.display = 'none';
+            
+            if (currentView === 'grid') {
+                renderGridView(container);
+            } else {
+                renderListView(container);
             }
         }
 
-        function saveToLocalStorage() {
-            try {
-                const data = {
-                    tires: tires,
-                    activityLog: activityLog.slice(0, 20),
-                    lastSave: new Date().toISOString()
-                };
-                localStorage.setItem('pneumaticiData', JSON.stringify(data));
-            } catch (error) {
-                console.error('Errore salvataggio locale:', error);
-            }
+        function renderGridView(container) {
+            container.innerHTML = `
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    ${filteredTires.map(tire => `
+                        <div class="tire-card rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6 fade-in">
+                            <div class="flex items-start justify-between mb-3 sm:mb-4">
+                                <div class="brand-logo ${tire.brand} text-xs sm:text-sm">
+                                    ${tire.brand.substring(0, 3).toUpperCase()}
+                                </div>
+                                <div class="flex space-x-1 sm:space-x-2">
+                                    <button onclick="editTire('${tire.id}')" class="text-blue-600 hover:text-blue-800 p-1.5 sm:p-2 rounded-lg hover:bg-blue-50 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </button>
+                                    <button onclick="deleteTire('${tire.id}')" class="text-red-600 hover:text-red-800 p-1.5 sm:p-2 rounded-lg hover:bg-red-50 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3 sm:mb-4">
+                                <h4 class="text-base sm:text-lg font-bold text-gray-900 mb-1 leading-tight">${tire.brand.charAt(0).toUpperCase() + tire.brand.slice(1)} ${tire.model}</h4>
+                                <p class="text-gray-600 text-sm">${tire.width}/${tire.height}R${tire.diameter} <span class="speed-code ${tire.speedCode === 'C' ? 'commercial' : ''} text-xs">${tire.speedCode === 'C' ? '🚐 C' : tire.speedCode}</span></p>
+                            </div>
+                            
+                            <div class="flex items-center justify-between mb-3 sm:mb-4">
+                                <span class="season-badge ${tire.season} text-xs">${tire.season.charAt(0).toUpperCase() + tire.season.slice(1)}</span>
+                                <div class="text-right">
+                                    <p class="text-xl sm:text-2xl font-bold ${tire.quantity === 0 ? 'text-red-600' : tire.quantity <= 2 ? 'text-yellow-600' : 'text-green-600'}">${tire.quantity}</p>
+                                    <p class="text-xs text-gray-500">pezzi</p>
+                                </div>
+                            </div>
+                            
+                            ${tire.price ? `
+                                <div class="flex items-center justify-between mb-3 sm:mb-4">
+                                    <span class="text-xs sm:text-sm text-gray-600">Prezzo unitario</span>
+                                    <span class="text-base sm:text-lg font-bold text-gray-900">€${tire.price}</span>
+                                </div>
+                            ` : ''}
+                            
+                            <div class="flex flex-wrap items-center gap-1 sm:gap-2 mb-3 sm:mb-4">
+                                ${tire.quantity <= 2 && tire.quantity > 0 ? '<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">⚠️ Scorte basse</span>' : ''}
+                                ${tire.quantity === 0 ? '<span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-medium">❌ Esaurito</span>' : ''}
+                                ${tire.quantity > 10 ? '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">✅ Disponibile</span>' : ''}
+                            </div>
+                            
+                            ${tire.notes ? `<p class="text-xs sm:text-sm text-gray-600 italic line-clamp-2">${tire.notes}</p>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
         }
 
-        function loadFromLocalStorage() {
-            try {
-                const savedData = localStorage.getItem('pneumaticiData');
-                if (savedData) {
-                    const data = JSON.parse(savedData);
-                    
-                    if (data.tires) {
-                        tires = data.tires.map(tire => ({
-                            ...tire,
-                            lastModified: new Date(tire.lastModified)
-                        }));
-                    }
-                    
-                    if (data.activityLog) {
-                        activityLog = data.activityLog.map(activity => ({
-                            ...activity,
-                            timestamp: new Date(activity.timestamp)
-                        }));
-                    }
-                    
-                    updateDisplay();
-                    updateActivityLog();
-                    showNotification('📂 Dati caricati dal storage locale', 'info');
-                }
-            } catch (error) {
-                console.error('Errore caricamento locale:', error);
-                initializeSampleData();
-            }
+        function renderListView(container) {
+            container.innerHTML = `
+                <div class="space-y-3 sm:space-y-4">
+                    ${filteredTires.map(tire => `
+                        <div class="tire-card rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6 fade-in">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                <div class="flex items-start sm:items-center space-x-3 sm:space-x-4 mb-3 sm:mb-0">
+                                    <div class="brand-logo ${tire.brand} text-xs sm:text-sm flex-shrink-0">
+                                        ${tire.brand.substring(0, 3).toUpperCase()}
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <h4 class="text-base sm:text-lg font-bold text-gray-900 truncate">${tire.brand.charAt(0).toUpperCase() + tire.brand.slice(1)} ${tire.model}</h4>
+                                        <p class="text-sm text-gray-600">${tire.width}/${tire.height}R${tire.diameter} <span class="speed-code ${tire.speedCode === 'C' ? 'commercial' : ''} text-xs">${tire.speedCode === 'C' ? '🚐 C' : tire.speedCode}</span></p>
+                                        <div class="flex flex-wrap items-center gap-1 sm:gap-2 mt-2">
+                                            <span class="season-badge ${tire.season} text-xs">${tire.season.charAt(0).toUpperCase() + tire.season.slice(1)}</span>
+                                            ${tire.quantity <= 2 && tire.quantity > 0 ? '<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">⚠️ Scorte basse</span>' : ''}
+                                            ${tire.quantity === 0 ? '<span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-medium">❌ Esaurito</span>' : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between sm:justify-end sm:space-x-6 lg:space-x-8">
+                                    <div class="flex items-center space-x-4 sm:space-x-6">
+                                        <div class="text-center">
+                                            <p class="text-xs sm:text-sm text-gray-600">Quantità</p>
+                                            <p class="text-lg sm:text-2xl font-bold ${tire.quantity === 0 ? 'text-red-600' : tire.quantity <= 2 ? 'text-yellow-600' : 'text-green-600'}">${tire.quantity}</p>
+                                        </div>
+                                        ${tire.price ? `
+                                            <div class="text-center">
+                                                <p class="text-xs sm:text-sm text-gray-600">Prezzo</p>
+                                                <p class="text-base sm:text-xl font-bold text-gray-900">€${tire.price}</p>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                    <div class="flex space-x-1 sm:space-x-2">
+                                        <button onclick="editTire('${tire.id}')" class="text-blue-600 hover:text-blue-800 p-1.5 sm:p-2 rounded-lg hover:bg-blue-50 transition-colors">
+                                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button>
+                                        <button onclick="deleteTire('${tire.id}')" class="text-red-600 hover:text-red-800 p-1.5 sm:p-2 rounded-lg hover:bg-red-50 transition-colors">
+                                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            ${tire.notes ? `<p class="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-600 italic ml-0 sm:ml-20 line-clamp-2">${tire.notes}</p>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
         }
 
-        function initializeSampleData() {
-            if (tires.length === 0) {
-                tires = [
-                    {
-                        id: Date.now() + 1,
-                        brand: 'Michelin',
-                        model: 'Pilot Sport 4',
-                        width: 205,
-                        height: 55,
-                        diameter: 16,
-                        season: 'Estive',
-                        speedCode: 'V',
-                        quantity: 8,
-                        price: 145.50,
-                        lastModified: new Date(),
-                        modifiedBy: 'Sistema'
-                    },
-                    {
-                        id: Date.now() + 2,
-                        brand: 'Continental',
-                        model: 'WinterContact TS 860',
-                        width: 225,
-                        height: 45,
-                        diameter: 17,
-                        season: 'Invernali',
-                        speedCode: 'H',
-                        quantity: 4,
-                        price: 132.00,
-                        lastModified: new Date(Date.now() - 300000),
-                        modifiedBy: 'Sistema'
-                    }
-                ];
-
-                activityLog = [
-                    {
-                        id: Date.now() + 1,
-                        user: 'Sistema',
-                        action: 'ha inizializzato',
-                        item: 'Gestionale Pneumatici',
-                        details: 'Dati di esempio caricati',
-                        timestamp: new Date(),
-                        type: 'system'
-                    }
-                ];
-
-                updateDisplay();
-                updateActivityLog();
+        function toggleView(view) {
+            currentView = view;
+            
+            const gridBtn = document.getElementById('gridViewBtn');
+            const listBtn = document.getElementById('listViewBtn');
+            
+            if (view === 'grid') {
+                gridBtn.className = 'p-2 rounded-lg bg-blue-100 text-blue-600';
+                listBtn.className = 'p-2 rounded-lg bg-gray-100 text-gray-600';
+            } else {
+                gridBtn.className = 'p-2 rounded-lg bg-gray-100 text-gray-600';
+                listBtn.className = 'p-2 rounded-lg bg-blue-100 text-blue-600';
             }
+            
+            renderTires();
         }
 
-        // UI Functions
-        function openAddModal() {
-            editingIndex = -1;
+        function applyFilters() {
+            const brandFilter = document.getElementById('brandFilter').value;
+            const seasonFilter = document.getElementById('seasonFilter').value;
+            const sizeFilter = document.getElementById('sizeFilter').value;
+            const stockFilter = document.getElementById('stockFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+
+            filteredTires = tiresData.filter(tire => {
+                const matchesBrand = !brandFilter || tire.brand === brandFilter;
+                const matchesSeason = !seasonFilter || tire.season === seasonFilter;
+                const matchesSize = !sizeFilter || `${tire.width}/${tire.height}R${tire.diameter}` === sizeFilter;
+                const matchesSearch = !searchFilter || 
+                    tire.brand.toLowerCase().includes(searchFilter) ||
+                    tire.model.toLowerCase().includes(searchFilter) ||
+                    `${tire.width}/${tire.height}R${tire.diameter}`.includes(searchFilter);
+                
+                let matchesStock = true;
+                if (stockFilter === 'available') matchesStock = tire.quantity > 2;
+                else if (stockFilter === 'low') matchesStock = tire.quantity <= 2 && tire.quantity > 0;
+                else if (stockFilter === 'out') matchesStock = tire.quantity === 0;
+
+                return matchesBrand && matchesSeason && matchesSize && matchesSearch && matchesStock;
+            });
+
+            renderTires();
+        }
+
+        function clearFilters() {
+            document.getElementById('brandFilter').value = '';
+            document.getElementById('seasonFilter').value = '';
+            document.getElementById('sizeFilter').value = '';
+            document.getElementById('stockFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+            filteredTires = [...tiresData];
+            renderTires();
+        }
+
+        function showAddModal() {
+            currentEditId = null;
             document.getElementById('modalTitle').textContent = 'Aggiungi Pneumatico';
             document.getElementById('tireForm').reset();
-            document.getElementById('tireModal').classList.add('show');
+            document.getElementById('tireModal').style.display = 'block';
         }
 
-        function openEditModal(index) {
-            editingIndex = index;
-            const tire = tires[index];
+        function editTire(id) {
+            const tire = tiresData.find(t => t.id === id);
+            if (!tire) return;
+
+            currentEditId = id;
             document.getElementById('modalTitle').textContent = 'Modifica Pneumatico';
             
             document.getElementById('brand').value = tire.brand;
@@ -809,506 +1418,953 @@
             document.getElementById('season').value = tire.season;
             document.getElementById('speedCode').value = tire.speedCode;
             document.getElementById('quantity').value = tire.quantity;
-            document.getElementById('price').value = tire.price;
+            document.getElementById('price').value = tire.price || '';
+            document.getElementById('notes').value = tire.notes || '';
             
-            document.getElementById('tireModal').classList.add('show');
+            document.getElementById('tireModal').style.display = 'block';
         }
 
         function closeModal() {
-            document.getElementById('tireModal').classList.remove('show');
+            document.getElementById('tireModal').style.display = 'none';
+            document.getElementById('customBrand').style.display = 'none';
+            document.getElementById('customSpeedCode').style.display = 'none';
+            document.getElementById('customBrand').required = false;
+            document.getElementById('customSpeedCode').required = false;
+            currentEditId = null;
         }
 
-        async function saveTire(event) {
-            event.preventDefault();
+        function handleBrandChange() {
+            const brandSelect = document.getElementById('brand');
+            const customBrandInput = document.getElementById('customBrand');
             
-            const tire = {
-                id: editingIndex >= 0 ? tires[editingIndex].id : Date.now(),
-                brand: document.getElementById('brand').value,
+            if (brandSelect.value === 'custom') {
+                customBrandInput.style.display = 'block';
+                customBrandInput.required = true;
+                customBrandInput.focus();
+            } else {
+                customBrandInput.style.display = 'none';
+                customBrandInput.required = false;
+                customBrandInput.value = '';
+            }
+        }
+
+        function handleSpeedCodeChange() {
+            const speedCodeSelect = document.getElementById('speedCode');
+            const customSpeedCodeInput = document.getElementById('customSpeedCode');
+            
+            if (speedCodeSelect.value === 'custom') {
+                customSpeedCodeInput.style.display = 'block';
+                customSpeedCodeInput.required = true;
+                customSpeedCodeInput.focus();
+            } else {
+                customSpeedCodeInput.style.display = 'none';
+                customSpeedCodeInput.required = false;
+                customSpeedCodeInput.value = '';
+            }
+        }
+
+        function saveTire() {
+            const form = document.getElementById('tireForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Gestisci marca personalizzata
+            let brandValue = document.getElementById('brand').value;
+            if (brandValue === 'custom') {
+                const customBrand = document.getElementById('customBrand').value.trim();
+                if (!customBrand) {
+                    showNotification('⚠️ Inserisci il nome della marca personalizzata', 'error');
+                    return;
+                }
+                brandValue = customBrand.toLowerCase().replace(/\s+/g, '-');
+                
+                // Aggiungi la nuova marca alle opzioni se non esiste già
+                addNewBrandOption(brandValue, customBrand);
+            }
+
+            // Gestisci codice velocità personalizzato
+            let speedCodeValue = document.getElementById('speedCode').value;
+            if (speedCodeValue === 'custom') {
+                const customSpeedCode = document.getElementById('customSpeedCode').value.trim().toUpperCase();
+                if (!customSpeedCode) {
+                    showNotification('⚠️ Inserisci il codice velocità personalizzato', 'error');
+                    return;
+                }
+                speedCodeValue = customSpeedCode;
+                
+                // Aggiungi il nuovo codice alle opzioni se non esiste già
+                addNewSpeedCodeOption(speedCodeValue);
+            }
+
+            const tireData = {
+                brand: brandValue,
                 model: document.getElementById('model').value,
                 width: parseInt(document.getElementById('width').value),
                 height: parseInt(document.getElementById('height').value),
                 diameter: parseInt(document.getElementById('diameter').value),
                 season: document.getElementById('season').value,
-                speedCode: document.getElementById('speedCode').value,
+                speedCode: speedCodeValue,
                 quantity: parseInt(document.getElementById('quantity').value),
-                price: parseFloat(document.getElementById('price').value),
-                lastModified: new Date(),
-                modifiedBy: currentUser ? 'Tu' : 'Utente'
+                price: parseFloat(document.getElementById('price').value) || null,
+                notes: document.getElementById('notes').value || null,
+                updatedAt: new Date().toISOString()
             };
 
-            const tireDescription = `${tire.brand} ${tire.model} ${tire.width}/${tire.height}R${tire.diameter}`;
-            
-            if (editingIndex >= 0) {
-                tires[editingIndex] = tire;
-                addActivity('Tu', 'hai modificato', tireDescription, 'aggiornamento dati', 'edit');
-                showNotification(`Pneumatico modificato: ${tireDescription}`, 'success');
+            if (window.firebaseReady) {
+                saveToFirebase(tireData);
             } else {
-                tires.push(tire);
-                addActivity('Tu', 'hai aggiunto', tireDescription, `${tire.quantity} pezzi`, 'add');
-                showNotification(`Nuovo pneumatico aggiunto: ${tireDescription}`, 'success');
+                saveLocally(tireData);
             }
+        }
 
-            updateDisplay();
-            updateActivityLog();
+        function addNewBrandOption(brandValue, brandDisplay) {
+            const brandSelect = document.getElementById('brand');
+            const brandFilter = document.getElementById('brandFilter');
+            
+            // Controlla se la marca esiste già
+            const existingOption = Array.from(brandSelect.options).find(option => option.value === brandValue);
+            if (existingOption) return;
+            
+            // Aggiungi al select del form (prima dell'opzione "Aggiungi nuova marca")
+            const newOption = document.createElement('option');
+            newOption.value = brandValue;
+            newOption.textContent = brandDisplay;
+            brandSelect.insertBefore(newOption, brandSelect.lastElementChild);
+            
+            // Aggiungi al filtro
+            const filterOption = document.createElement('option');
+            filterOption.value = brandValue;
+            filterOption.textContent = brandDisplay;
+            brandFilter.appendChild(filterOption);
+            
+            // Salva le marche personalizzate nel localStorage
+            const customBrands = JSON.parse(localStorage.getItem('customBrands') || '{}');
+            customBrands[brandValue] = brandDisplay;
+            localStorage.setItem('customBrands', JSON.stringify(customBrands));
+            
+            showNotification(`✅ Nuova marca "${brandDisplay}" aggiunta con successo!`, 'success');
+        }
+
+        function addNewSpeedCodeOption(speedCode) {
+            const speedCodeSelect = document.getElementById('speedCode');
+            
+            // Controlla se il codice esiste già
+            const existingOption = Array.from(speedCodeSelect.options).find(option => option.value === speedCode);
+            if (existingOption) return;
+            
+            // Aggiungi al select (prima dell'opzione "Aggiungi nuovo codice")
+            const newOption = document.createElement('option');
+            newOption.value = speedCode;
+            newOption.textContent = `${speedCode} (Personalizzato)`;
+            speedCodeSelect.insertBefore(newOption, speedCodeSelect.lastElementChild);
+            
+            // Salva i codici personalizzati nel localStorage
+            const customSpeedCodes = JSON.parse(localStorage.getItem('customSpeedCodes') || '[]');
+            if (!customSpeedCodes.includes(speedCode)) {
+                customSpeedCodes.push(speedCode);
+                localStorage.setItem('customSpeedCodes', JSON.stringify(customSpeedCodes));
+            }
+            
+            showNotification(`✅ Nuovo codice velocità "${speedCode}" aggiunto con successo!`, 'success');
+        }
+        
+        function saveToFirebase(tireData) {
+            try {
+                const { ref, set, push, serverTimestamp } = window.firebaseRefs;
+                tireData.updatedAt = serverTimestamp();
+                
+                if (currentEditId) {
+                    const tireRef = ref(window.firebaseDB, `tires/${currentEditId}`);
+                    set(tireRef, tireData).then(() => {
+                        closeModal();
+                        showNotification('✅ Pneumatico aggiornato con successo!', 'success');
+                    }).catch((error) => {
+                        console.error('Errore Firebase:', error);
+                        saveLocally(tireData);
+                    });
+                } else {
+                    tireData.createdAt = serverTimestamp();
+                    const tiresRef = ref(window.firebaseDB, 'tires');
+                    push(tiresRef, tireData).then(() => {
+                        closeModal();
+                        showNotification('✅ Pneumatico aggiunto con successo!', 'success');
+                    }).catch((error) => {
+                        console.error('Errore Firebase:', error);
+                        saveLocally(tireData);
+                    });
+                }
+            } catch (error) {
+                console.error('Errore Firebase:', error);
+                saveLocally(tireData);
+            }
+        }
+        
+        function saveLocally(tireData) {
+            if (currentEditId) {
+                const index = tiresData.findIndex(t => t.id === currentEditId);
+                if (index !== -1) {
+                    tiresData[index] = { ...tireData, id: currentEditId };
+                }
+            } else {
+                tireData.id = 'local_' + Date.now();
+                tireData.createdAt = new Date().toISOString();
+                tiresData.push(tireData);
+            }
+            
+            localStorage.setItem('tiresData', JSON.stringify(tiresData));
+            filteredTires = [...tiresData];
+            
+            updateStats();
+            updateFilters();
+            renderTires();
             closeModal();
             
-            // Save to Firebase
-            if (firebaseConnected) {
-                const tiresData = {};
-                tires.forEach(t => {
-                    tiresData[t.id] = { ...t, lastModified: t.lastModified.toISOString() };
-                });
-                await saveToFirebase('tires', tiresData);
+            showNotification(
+                currentEditId ? '✅ Pneumatico aggiornato con successo!' : '✅ Pneumatico aggiunto con successo!', 
+                'success'
+            );
+        }
+
+        function deleteTire(id) {
+            if (!confirm('⚠️ Sei sicuro di voler eliminare questo pneumatico?')) return;
+
+            if (window.firebaseReady) {
+                deleteFromFirebase(id);
             } else {
-                saveToLocalStorage();
+                deleteLocally(id);
             }
         }
-
-        function deleteTire(index) {
-            if (confirm('Sei sicuro di voler eliminare questo pneumatico?')) {
-                const tire = tires[index];
-                const tireDescription = `${tire.brand} ${tire.model} ${tire.width}/${tire.height}R${tire.diameter}`;
+        
+        function deleteFromFirebase(id) {
+            try {
+                const { ref, remove } = window.firebaseRefs;
+                const tireRef = ref(window.firebaseDB, `tires/${id}`);
                 
-                tires.splice(index, 1);
-                addActivity('Tu', 'hai eliminato', tireDescription, 'rimosso dall\'inventario', 'delete');
-                
-                updateDisplay();
-                updateActivityLog();
-                showNotification(`Pneumatico eliminato: ${tireDescription}`, 'info');
-                
-                // Save to Firebase
-                if (firebaseConnected) {
-                    const tiresData = {};
-                    tires.forEach(t => {
-                        tiresData[t.id] = { ...t, lastModified: t.lastModified.toISOString() };
-                    });
-                    saveToFirebase('tires', tiresData);
-                } else {
-                    saveToLocalStorage();
-                }
-            }
-        }
-
-        async function updateQuantity(index, change) {
-            const newQuantity = tires[index].quantity + change;
-            if (newQuantity >= 0) {
-                const oldQuantity = tires[index].quantity;
-                tires[index].quantity = newQuantity;
-                tires[index].lastModified = new Date();
-                tires[index].modifiedBy = 'Tu';
-                
-                const tireDescription = `${tires[index].brand} ${tires[index].model}`;
-                addActivity('Tu', 'hai modificato la quantità', tireDescription, `da ${oldQuantity} a ${newQuantity} pezzi`, 'quantity');
-                
-                updateDisplay();
-                updateActivityLog();
-                
-                if (newQuantity <= 3 && oldQuantity > 3) {
-                    showNotification(`⚠️ Scorte basse per ${tireDescription}`, 'warning');
-                }
-                
-                // Save to Firebase
-                if (firebaseConnected) {
-                    const tiresData = {};
-                    tires.forEach(t => {
-                        tiresData[t.id] = { ...t, lastModified: t.lastModified.toISOString() };
-                    });
-                    await saveToFirebase('tires', tiresData);
-                } else {
-                    saveToLocalStorage();
-                }
-            }
-        }
-
-        function addActivity(user, action, item, details, type) {
-            const activity = {
-                id: Date.now(),
-                user,
-                action,
-                item,
-                details,
-                timestamp: new Date(),
-                type
-            };
-            
-            activityLog.unshift(activity);
-            
-            // Keep only last 50 activities
-            if (activityLog.length > 50) {
-                activityLog = activityLog.slice(0, 50);
-            }
-            
-            // Save to Firebase
-            if (firebaseConnected) {
-                const activityData = {};
-                activityLog.forEach(a => {
-                    activityData[a.id] = { ...a, timestamp: a.timestamp.toISOString() };
+                remove(tireRef).then(() => {
+                    showNotification('🗑️ Pneumatico eliminato con successo!', 'success');
+                }).catch((error) => {
+                    console.error('Errore Firebase:', error);
+                    deleteLocally(id);
                 });
-                saveToFirebase('activity', activityData);
+            } catch (error) {
+                console.error('Errore Firebase:', error);
+                deleteLocally(id);
+            }
+        }
+        
+        function deleteLocally(id) {
+            const index = tiresData.findIndex(t => t.id === id);
+            if (index !== -1) {
+                tiresData.splice(index, 1);
+                localStorage.setItem('tiresData', JSON.stringify(tiresData));
+                filteredTires = [...tiresData];
+                
+                updateStats();
+                updateFilters();
+                renderTires();
+                
+                showNotification('🗑️ Pneumatico eliminato con successo!', 'success');
             }
         }
 
-        function updateActivityLog() {
-            const container = document.getElementById('activityLog');
-            const activitiesToShow = activityLog.slice(0, 10);
+        function exportData() {
+            const dataStr = JSON.stringify(tiresData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `inventario-pneumatici-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
             
-            if (activitiesToShow.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-sm">Nessuna attività recente</p>';
-                return;
-            }
+            showNotification('📁 Dati esportati con successo!', 'success');
+        }
+
+        function printToPDF() {
+            showNotification('📄 Generazione PDF in corso...', 'info');
             
-            container.innerHTML = activitiesToShow.map(activity => {
-                const timeAgo = getTimeAgo(activity.timestamp);
-                const iconMap = {
-                    'add': '➕',
-                    'edit': '✏️',
-                    'quantity': '📦',
-                    'delete': '🗑️',
-                    'system': '⚙️'
-                };
-                
-                return `
-                    <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <span class="text-lg">${iconMap[activity.type] || '📝'}</span>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm text-gray-900">
-                                <span class="font-medium">${activity.user}</span> ${activity.action}
-                                <span class="font-medium">${activity.item}</span>
-                            </p>
-                            <p class="text-xs text-gray-500">${activity.details}</p>
-                            <p class="text-xs text-gray-400 mt-1">${timeAgo}</p>
+            // Crea una nuova finestra per la stampa
+            const printWindow = window.open('', '_blank');
+            
+            // Genera il contenuto HTML per la stampa
+            const printContent = generatePrintContent();
+            
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            
+            // Attendi che il contenuto sia caricato e poi stampa
+            printWindow.onload = function() {
+                setTimeout(() => {
+                    printWindow.print();
+                    showNotification('🖨️ PDF generato con successo!', 'success');
+                }, 500);
+            };
+        }
+
+        function generatePrintContent() {
+            const currentDate = new Date().toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const totalTires = tiresData.length;
+            const availableTires = tiresData.filter(tire => tire.quantity > 0).length;
+            const lowStockTires = tiresData.filter(tire => tire.quantity <= 2 && tire.quantity > 0).length;
+            const totalValue = tiresData.reduce((sum, tire) => sum + (tire.price * tire.quantity || 0), 0);
+            
+            return `
+                <!DOCTYPE html>
+                <html lang="it">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Inventario Pneumatici - ${currentDate}</title>
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                        
+                        * {
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
+                        
+                        body {
+                            font-family: 'Inter', sans-serif;
+                            line-height: 1.3;
+                            color: #333;
+                            background: white;
+                            font-size: 11px;
+                        }
+                        
+                        .header {
+                            text-align: center;
+                            margin-bottom: 15px;
+                            padding: 10px;
+                            border-bottom: 2px solid #3b82f6;
+                        }
+                        
+                        .header h1 {
+                            font-size: 18px;
+                            font-weight: 700;
+                            color: #1f2937;
+                            margin-bottom: 5px;
+                        }
+                        
+                        .header p {
+                            font-size: 11px;
+                            color: #6b7280;
+                        }
+                        
+                        .stats {
+                            display: grid;
+                            grid-template-columns: repeat(4, 1fr);
+                            gap: 8px;
+                            margin-bottom: 15px;
+                            padding: 0 10px;
+                        }
+                        
+                        .stat-card {
+                            text-align: center;
+                            padding: 8px;
+                            border: 1px solid #e5e7eb;
+                            border-radius: 4px;
+                            background: #f9fafb;
+                        }
+                        
+                        .stat-card h3 {
+                            font-size: 16px;
+                            font-weight: 700;
+                            margin-bottom: 2px;
+                        }
+                        
+                        .stat-card p {
+                            font-size: 9px;
+                            color: #6b7280;
+                            text-transform: uppercase;
+                            font-weight: 600;
+                        }
+                        
+                        .tire-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin: 10px;
+                            font-size: 9px;
+                        }
+                        
+                        .tire-table th,
+                        .tire-table td {
+                            padding: 4px 3px;
+                            text-align: left;
+                            border-bottom: 1px solid #e5e7eb;
+                            vertical-align: top;
+                        }
+                        
+                        .tire-table th {
+                            background-color: #f3f4f6;
+                            font-weight: 600;
+                            color: #374151;
+                            text-transform: uppercase;
+                            font-size: 8px;
+                            line-height: 1.2;
+                        }
+                        
+                        .tire-table tr:nth-child(even) {
+                            background-color: #f9fafb;
+                        }
+                        
+                        .brand-badge {
+                            display: inline-block;
+                            padding: 1px 4px;
+                            border-radius: 3px;
+                            font-size: 8px;
+                            font-weight: 600;
+                            color: white;
+                            text-transform: uppercase;
+                        }
+                        
+                        .michelin { background: #1e40af; }
+                        .riken { background: #dc2626; }
+                        .falken { background: #059669; }
+                        .sailun { background: #7c3aed; }
+                        .continental { background: #f59e0b; }
+                        .pirelli { background: #1f2937; }
+                        .bridgestone { background: #b91c1c; }
+                        .goodyear { background: #0891b2; }
+                        .dunlop { background: #16a34a; }
+                        .yokohama { background: #ea580c; }
+                        
+                        .season-badge {
+                            padding: 1px 4px;
+                            border-radius: 8px;
+                            font-size: 8px;
+                            font-weight: 600;
+                        }
+                        
+                        .estive { background: #fef3c7; color: #92400e; }
+                        .invernali { background: #dbeafe; color: #1e40af; }
+                        .quattro-stagioni { background: #d1fae5; color: #065f46; }
+                        
+                        .quantity-high { color: #059669; font-weight: 600; }
+                        .quantity-low { color: #f59e0b; font-weight: 600; }
+                        .quantity-out { color: #dc2626; font-weight: 600; }
+                        
+                        .footer {
+                            margin-top: 15px;
+                            padding: 8px;
+                            text-align: center;
+                            border-top: 1px solid #e5e7eb;
+                            font-size: 9px;
+                            color: #6b7280;
+                        }
+                        
+                        .col-brand { width: 12%; }
+                        .col-model { width: 18%; }
+                        .col-size { width: 12%; }
+                        .col-season { width: 10%; }
+                        .col-code { width: 6%; }
+                        .col-qty { width: 8%; }
+                        .col-price { width: 10%; }
+                        .col-value { width: 10%; }
+                        .col-notes { width: 14%; }
+                        
+                        @media print {
+                            body { 
+                                -webkit-print-color-adjust: exact;
+                                margin: 0.5cm;
+                            }
+                            .tire-table { 
+                                page-break-inside: auto;
+                                margin: 5px;
+                            }
+                            .tire-table tr {
+                                page-break-inside: avoid;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>🏢 TireManager Pro - Inventario</h1>
+                        <p>Report del ${currentDate}</p>
+                    </div>
+                    
+                    <div class="stats">
+                        <div class="stat-card">
+                            <h3 style="color: #3b82f6;">${totalTires}</h3>
+                            <p>Totale</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 style="color: #059669;">${availableTires}</h3>
+                            <p>Disponibili</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 style="color: #f59e0b;">${lowStockTires}</h3>
+                            <p>Scorte Basse</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 style="color: #7c3aed;">€${totalValue.toLocaleString('it-IT', {minimumFractionDigits: 0})}</h3>
+                            <p>Valore Tot.</p>
                         </div>
                     </div>
-                `;
-            }).join('');
-        }
-
-        function getTimeAgo(date) {
-            const now = new Date();
-            const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-            
-            if (diffInMinutes < 1) return 'ora';
-            if (diffInMinutes < 60) return `${diffInMinutes} min fa`;
-            
-            const diffInHours = Math.floor(diffInMinutes / 60);
-            if (diffInHours < 24) return `${diffInHours}h fa`;
-            
-            const diffInDays = Math.floor(diffInHours / 24);
-            return `${diffInDays}g fa`;
-        }
-
-        function getBrandClass(brand) {
-            return brand.toLowerCase().replace(/\s+/g, '');
-        }
-
-        function getSeasonClass(season) {
-            return season.toLowerCase().replace(/\s+/g, '-');
-        }
-
-        function updateStats() {
-            const total = tires.length;
-            const available = tires.filter(tire => tire.quantity > 0).length;
-            const lowStock = tires.filter(tire => tire.quantity > 0 && tire.quantity <= 3).length;
-            const brands = new Set(tires.map(tire => tire.brand)).size;
-
-            document.getElementById('totalTires').textContent = total;
-            document.getElementById('availableTires').textContent = available;
-            document.getElementById('lowStockTires').textContent = lowStock;
-            document.getElementById('totalBrands').textContent = brands;
-        }
-
-        function renderTiresTable(tiresToRender = tires) {
-            const tbody = document.getElementById('tiresTableBody');
-            
-            if (tiresToRender.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="px-6 py-8 text-center text-gray-500">
-                            <div class="flex flex-col items-center">
-                                <span class="text-4xl mb-2">🔍</span>
-                                <p>Nessun pneumatico trovato</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            tbody.innerHTML = tiresToRender.map((tire, index) => {
-                const originalIndex = tires.indexOf(tire);
-                const stockStatus = tire.quantity === 0 ? 'text-red-600' : tire.quantity <= 3 ? 'text-yellow-600' : 'text-green-600';
-                
-                return `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="brand-logo ${getBrandClass(tire.brand)}">
-                                    ${tire.brand.substring(0, 3).toUpperCase()}
-                                </div>
-                                <span class="ml-2 md:ml-3 text-xs md:text-sm font-medium text-gray-900">${tire.brand}</span>
-                            </div>
-                        </td>
-                        <td class="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-900">${tire.model}</td>
-                        <td class="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs md:text-sm font-mono text-gray-900">${tire.width}/${tire.height}R${tire.diameter}</td>
-                        <td class="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap">
-                            <span class="season-badge ${getSeasonClass(tire.season)}">${tire.season}</span>
-                        </td>
-                        <td class="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap">
-                            <span class="speed-code">${tire.speedCode}</span>
-                        </td>
-                        <td class="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap">
-                            <div class="flex items-center space-x-1 md:space-x-2">
-                                <button onclick="updateQuantity(${originalIndex}, -1)" class="w-6 h-6 bg-red-100 text-red-600 rounded hover:bg-red-200 flex items-center justify-center text-xs md:text-sm">-</button>
-                                <span class="text-xs md:text-sm font-medium ${stockStatus} min-w-[1.5rem] md:min-w-[2rem] text-center">${tire.quantity}</span>
-                                <button onclick="updateQuantity(${originalIndex}, 1)" class="w-6 h-6 bg-green-100 text-green-600 rounded hover:bg-green-200 flex items-center justify-center text-xs md:text-sm">+</button>
-                            </div>
-                        </td>
-                        <td class="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs md:text-sm font-medium text-gray-900">€${tire.price.toFixed(2)}</td>
-                        <td class="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-1 md:space-x-2">
-                                <button onclick="openEditModal(${originalIndex})" class="text-blue-600 hover:text-blue-900 text-lg md:text-base">✏️</button>
-                                <button onclick="deleteTire(${originalIndex})" class="text-red-600 hover:text-red-900 text-lg md:text-base">🗑️</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function filterTires() {
-            const brandFilter = document.getElementById('filterBrand').value.toLowerCase();
-            const seasonFilter = document.getElementById('filterSeason').value.toLowerCase();
-            const sizeFilter = document.getElementById('filterSize').value.toLowerCase();
-            const searchFilter = document.getElementById('searchInput').value.toLowerCase();
-
-            const filtered = tires.filter(tire => {
-                const matchesBrand = !brandFilter || tire.brand.toLowerCase().includes(brandFilter);
-                const matchesSeason = !seasonFilter || tire.season.toLowerCase().includes(seasonFilter);
-                const tireSize = `${tire.width}/${tire.height}r${tire.diameter}`;
-                const matchesSize = !sizeFilter || tireSize.includes(sizeFilter);
-                const matchesSearch = !searchFilter || tire.model.toLowerCase().includes(searchFilter);
-
-                return matchesBrand && matchesSeason && matchesSize && matchesSearch;
-            });
-
-            renderTiresTable(filtered);
-        }
-
-        function updateDisplay() {
-            updateStats();
-            renderTiresTable();
-        }
-
-        async function manualSync() {
-            const syncIcon = document.getElementById('syncIcon');
-            syncIcon.style.animation = 'spin 1s linear infinite';
-            
-            if (firebaseConnected) {
-                try {
-                    // Save current data to Firebase
-                    const tiresData = {};
-                    tires.forEach(t => {
-                        tiresData[t.id] = { ...t, lastModified: t.lastModified.toISOString() };
-                    });
-                    await saveToFirebase('tires', tiresData);
                     
-                    const activityData = {};
-                    activityLog.forEach(a => {
-                        activityData[a.id] = { ...a, timestamp: a.timestamp.toISOString() };
-                    });
-                    await saveToFirebase('activity', activityData);
+                    <table class="tire-table">
+                        <thead>
+                            <tr>
+                                <th class="col-brand">Marca</th>
+                                <th class="col-model">Modello</th>
+                                <th class="col-size">Misura</th>
+                                <th class="col-season">Stagione</th>
+                                <th class="col-code">Cod.</th>
+                                <th class="col-qty">Qty</th>
+                                <th class="col-price">Prezzo</th>
+                                <th class="col-value">Valore</th>
+                                <th class="col-notes">Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tiresData.map(tire => `
+                                <tr>
+                                    <td>
+                                        <span class="brand-badge ${tire.brand}">
+                                            ${tire.brand.substring(0, 4).toUpperCase()}
+                                        </span>
+                                    </td>
+                                    <td style="font-size: 8px; line-height: 1.2;">${tire.model.length > 15 ? tire.model.substring(0, 15) + '...' : tire.model}</td>
+                                    <td style="font-family: monospace; font-size: 8px;">${tire.width}/${tire.height}R${tire.diameter}</td>
+                                    <td>
+                                        <span class="season-badge ${tire.season}">
+                                            ${tire.season === 'estive' ? 'EST' : tire.season === 'invernali' ? 'INV' : '4ST'}
+                                        </span>
+                                    </td>
+                                    <td style="font-family: monospace; font-weight: 600; text-align: center;">${tire.speedCode}</td>
+                                    <td class="${tire.quantity === 0 ? 'quantity-out' : tire.quantity <= 2 ? 'quantity-low' : 'quantity-high'}" style="text-align: center; font-weight: 600;">
+                                        ${tire.quantity}
+                                    </td>
+                                    <td style="text-align: right;">${tire.price ? '€' + tire.price.toFixed(0) : '-'}</td>
+                                    <td style="font-weight: 600; text-align: right;">
+                                        ${tire.price ? '€' + (tire.price * tire.quantity).toFixed(0) : '-'}
+                                    </td>
+                                    <td style="font-size: 8px; line-height: 1.1; max-width: 80px; word-wrap: break-word;">
+                                        ${tire.notes ? (tire.notes.length > 25 ? tire.notes.substring(0, 25) + '...' : tire.notes) : '-'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                     
-                    showNotification('🔄 Sincronizzazione completata!', 'success');
-                } catch (error) {
-                    showNotification('❌ Errore sincronizzazione', 'error');
-                }
-            } else {
-                saveToLocalStorage();
-                showNotification('💾 Dati salvati localmente', 'info');
-            }
-            
-            setTimeout(() => {
-                syncIcon.style.animation = '';
-            }, 1000);
+                    <div class="footer">
+                        <p><strong>TireManager Pro</strong> | ${currentDate} | Articoli: ${totalTires} | Valore: €${totalValue.toLocaleString('it-IT', {minimumFractionDigits: 0})}</p>
+                    </div>
+                </body>
+                </html>
+            `;
         }
 
         function showNotification(message, type = 'info') {
-            const notificationArea = document.getElementById('notificationArea');
             const notification = document.createElement('div');
-            
-            const colors = {
-                'success': 'bg-green-500',
-                'warning': 'bg-yellow-500',
-                'error': 'bg-red-500',
-                'info': 'bg-blue-500'
-            };
-            
-            notification.className = `${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300`;
+            notification.className = `notification fixed top-4 right-4 z-50 p-4 rounded-lg shadow-2xl transition-all duration-300 ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                'bg-blue-500 text-white'
+            }`;
             notification.innerHTML = `
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium">${message}</span>
-                    <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white hover:text-gray-200">×</button>
+                <div class="flex items-center space-x-2">
+                    <span class="font-medium">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white/80 hover:text-white">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
                 </div>
             `;
             
-            notificationArea.appendChild(notification);
+            document.body.appendChild(notification);
             
-            // Animate in
             setTimeout(() => {
-                notification.classList.remove('translate-x-full');
-            }, 100);
-            
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.classList.add('translate-x-full');
-                    setTimeout(() => notification.remove(), 300);
-                }
-            }, 5000);
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 4000);
         }
 
-        function showFirebaseInfo() {
-            const modal = document.createElement('div');
-            modal.className = 'modal show';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold text-gray-900">🔥 Firebase + GitHub Pages</h2>
-                        <button onclick="this.closest('.modal').remove()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                            <h3 class="font-semibold text-green-800 mb-2">✅ Vantaggi della Soluzione Gratuita</h3>
-                            <ul class="text-sm text-green-700 space-y-1">
-                                <li>• <strong>Firebase Realtime Database</strong> - Sincronizzazione in tempo reale</li>
-                                <li>• <strong>GitHub Pages</strong> - Hosting gratuito e affidabile</li>
-                                <li>• <strong>Nessun costo</strong> - Piano Spark Firebase gratuito</li>
-                                <li>• <strong>Accessibile ovunque</strong> - Funziona su tutti i dispositivi</li>
-                                <li>• <strong>Backup automatico</strong> - I dati sono sempre al sicuro</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <h3 class="font-semibold text-blue-800 mb-2">🚀 Come Funziona</h3>
-                            <ol class="text-sm text-blue-700 space-y-1">
-                                <li>1. <strong>GitHub Pages</strong> ospita l'applicazione gratuitamente</li>
-                                <li>2. <strong>Firebase</strong> gestisce il database in tempo reale</li>
-                                <li>3. <strong>Autenticazione anonima</strong> per accesso immediato</li>
-                                <li>4. <strong>Fallback locale</strong> se Firebase non è disponibile</li>
-                            </ol>
-                        </div>
-                        
-                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                            <h3 class="font-semibold text-yellow-800 mb-2">📊 Limiti Piano Gratuito</h3>
-                            <ul class="text-sm text-yellow-700 space-y-1">
-                                <li>• <strong>1GB storage</strong> - Sufficiente per migliaia di pneumatici</li>
-                                <li>• <strong>10GB/mese transfer</strong> - Ottimo per uso aziendale</li>
-                                <li>• <strong>100 connessioni simultanee</strong> - Perfetto per team</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <div class="flex justify-end mt-6">
-                        <button onclick="this.closest('.modal').remove()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                            Perfetto!
-                        </button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
+        // Event listeners
+        document.getElementById('searchFilter').addEventListener('input', applyFilters);
 
-        function showDeploymentGuide() {
-            const modal = document.createElement('div');
-            modal.className = 'modal show';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold text-gray-900">📚 Guida Deploy Gratuito</h2>
-                        <button onclick="this.closest('.modal').remove()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-                    </div>
-                    
-                    <div class="space-y-6">
-                        <div>
-                            <h3 class="font-semibold text-gray-900 mb-3">🔥 1. Setup Firebase (Gratuito)</h3>
-                            <ol class="text-sm text-gray-700 space-y-2 ml-4">
-                                <li>1. Vai su <a href="https://console.firebase.google.com" target="_blank" class="text-blue-600 underline">Firebase Console</a></li>
-                                <li>2. Crea nuovo progetto (gratis)</li>
-                                <li>3. Abilita "Realtime Database"</li>
-                                <li>4. Imposta regole: <code class="bg-gray-100 px-1 rounded">{"rules": {".read": true, ".write": true}}</code></li>
-                                <li>5. Copia la configurazione nel codice</li>
-                            </ol>
-                        </div>
-                        
-                        <div>
-                            <h3 class="font-semibold text-gray-900 mb-3">🐙 2. Deploy su GitHub Pages</h3>
-                            <ol class="text-sm text-gray-700 space-y-2 ml-4">
-                                <li>1. Crea repository GitHub pubblico</li>
-                                <li>2. Carica il file HTML</li>
-                                <li>3. Vai in Settings → Pages</li>
-                                <li>4. Seleziona "Deploy from branch: main"</li>
-                                <li>5. Il tuo sito sarà su: <code class="bg-gray-100 px-1 rounded">username.github.io/repo-name</code></li>
-                            </ol>
-                        </div>
-                        
-                        <div>
-                            <h3 class="font-semibold text-gray-900 mb-3">⚙️ 3. Configurazione</h3>
-                            <ul class="text-sm text-gray-700 space-y-1 ml-4">
-                                <li>• Sostituisci la config Firebase con la tua</li>
-                                <li>• Personalizza il nome dell'app</li>
-                                <li>• Aggiungi il tuo dominio (opzionale)</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                            <h4 class="font-semibold text-green-800 mb-2">🎉 Risultato</h4>
-                            <p class="text-sm text-green-700">
-                                Avrai un gestionale pneumatici professionale, gratuito, sempre online e accessibile da qualsiasi dispositivo!
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex justify-end mt-6">
-                        <button onclick="this.closest('.modal').remove()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                            Iniziamo!
-                        </button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
-
-        function shareApp() {
-            const url = window.location.href;
-            const text = 'Gestionale Pneumatici - Sistema gratuito con Firebase e GitHub Pages';
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Gestionale Pneumatici',
-                    text: text,
-                    url: url
-                });
-            } else {
-                // Fallback: copy to clipboard
-                navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
-                    showNotification('🔗 Link copiato negli appunti!', 'success');
-                });
-            }
-        }
-
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeSampleData();
-            initializeFirebase();
-        });
-
-        // Close modals when clicking outside
         document.getElementById('tireModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeModal();
             }
         });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('tireModal').style.display === 'block') {
+                closeModal();
+            }
+            if (e.key === 'Escape' && document.getElementById('githubModal').style.display === 'block') {
+                closeGitHubModal();
+            }
+        });
+
+        // GitHub Integration Functions
+        let githubConfig = {
+            token: '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',
+            owner: 'pizza0579-del',
+            repo: 'VERO',
+            configured: true
+        };
+
+        // Carica configurazione GitHub salvata o usa quella predefinita
+        function loadGitHubConfig() {
+            const savedConfig = localStorage.getItem('github_config');
+            if (savedConfig) {
+                try {
+                    const parsed = JSON.parse(savedConfig);
+                    githubConfig = { ...githubConfig, ...parsed };
+                } catch (error) {
+                    console.error('Errore caricamento config GitHub:', error);
+                }
+            }
+            
+            // Salva la configurazione predefinita se non esiste
+            if (!savedConfig) {
+                localStorage.setItem('github_config', JSON.stringify(githubConfig));
+            }
+            
+            updateGitHubConnectionStatus();
+        }
+
+        function showGitHubModal() {
+            document.getElementById('githubModal').style.display = 'block';
+            
+            // Popola i campi con la configurazione attuale
+            if (githubConfig.configured) {
+                document.getElementById('githubToken').value = githubConfig.token;
+                document.getElementById('githubOwner').value = githubConfig.owner;
+                document.getElementById('githubRepo').value = githubConfig.repo;
+            }
+        }
+
+        function closeGitHubModal() {
+            document.getElementById('githubModal').style.display = 'none';
+        }
+
+        function saveGitHubConfig() {
+            const token = document.getElementById('githubToken').value.trim();
+            const owner = document.getElementById('githubOwner').value.trim();
+            const repo = document.getElementById('githubRepo').value.trim();
+            
+            if (!token || !owner || !repo) {
+                showNotification('⚠️ Compila tutti i campi per la configurazione GitHub', 'error');
+                return;
+            }
+            
+            githubConfig = {
+                token: token,
+                owner: owner,
+                repo: repo,
+                configured: true
+            };
+            
+            localStorage.setItem('github_config', JSON.stringify(githubConfig));
+            showNotification('✅ Configurazione GitHub salvata!', 'success');
+            
+            // Testa la connessione
+            testGitHubConnection();
+        }
+
+        async function testGitHubConnection() {
+            if (!githubConfig.configured) {
+                showNotification('⚠️ Configura prima GitHub', 'error');
+                return;
+            }
+            
+            showNotification('🔄 Test connessione GitHub...', 'info');
+            
+            try {
+                const response = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}`, {
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const repoData = await response.json();
+                    showNotification(`✅ Connesso a ${repoData.full_name}!`, 'success');
+                    updateGitHubConnectionStatus(true);
+                    return true;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Errore test GitHub:', error);
+                showNotification(`❌ Errore connessione: ${error.message}`, 'error');
+                updateGitHubConnectionStatus(false);
+                return false;
+            }
+        }
+
+        async function syncWithGitHub() {
+            if (!githubConfig.configured) {
+                showNotification('⚠️ Configura prima GitHub', 'error');
+                return;
+            }
+            
+            showNotification('🔄 Sincronizzazione con GitHub in corso...', 'info');
+            
+            try {
+                // Crea il backup completo
+                const githubBackup = {
+                    timestamp: new Date().toISOString(),
+                    version: '2.0.0',
+                    source: 'TireManager Pro',
+                    repository: `${githubConfig.owner}/${githubConfig.repo}`,
+                    data: tiresData,
+                    customBrands: JSON.parse(localStorage.getItem('customBrands') || '{}'),
+                    customSpeedCodes: JSON.parse(localStorage.getItem('customSpeedCodes') || '[]'),
+                    stats: {
+                        totalTires: tiresData.length,
+                        totalValue: tiresData.reduce((sum, tire) => sum + (tire.price * tire.quantity || 0), 0),
+                        lastSync: new Date().toISOString()
+                    }
+                };
+                
+                // Salva su GitHub
+                const success = await saveToGitHub(githubBackup);
+                
+                if (success) {
+                    localStorage.setItem('github_backup', JSON.stringify(githubBackup));
+                    localStorage.setItem('github_last_sync', new Date().toISOString());
+                    showNotification('✅ Dati sincronizzati con GitHub!', 'success');
+                    updateGitHubConnectionStatus(true);
+                } else {
+                    throw new Error('Errore durante il salvataggio su GitHub');
+                }
+                
+            } catch (error) {
+                console.error('Errore sincronizzazione GitHub:', error);
+                showNotification('❌ Errore durante la sincronizzazione GitHub', 'error');
+                updateGitHubConnectionStatus(false);
+            }
+        }
+
+        async function saveToGitHub(data) {
+            try {
+                const fileName = 'tire-inventory-data.json';
+                const content = JSON.stringify(data, null, 2);
+                const encodedContent = btoa(unescape(encodeURIComponent(content)));
+                
+                // Controlla se il file esiste già
+                let sha = null;
+                try {
+                    const existingFile = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${fileName}`, {
+                        headers: {
+                            'Authorization': `token ${githubConfig.token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    });
+                    
+                    if (existingFile.ok) {
+                        const fileData = await existingFile.json();
+                        sha = fileData.sha;
+                    }
+                } catch (error) {
+                    // File non esiste, continua senza SHA
+                }
+                
+                // Crea o aggiorna il file
+                const commitData = {
+                    message: `🔄 Aggiornamento inventario pneumatici - ${new Date().toLocaleString('it-IT')}`,
+                    content: encodedContent,
+                    branch: 'main'
+                };
+                
+                if (sha) {
+                    commitData.sha = sha;
+                }
+                
+                const response = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${fileName}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(commitData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ File salvato su GitHub:', result.commit.html_url);
+                    return true;
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Errore API GitHub');
+                }
+                
+            } catch (error) {
+                console.error('Errore salvataggio GitHub:', error);
+                return false;
+            }
+        }
+
+        async function loadFromGitHub() {
+            if (!githubConfig.configured) {
+                showNotification('⚠️ Configura prima GitHub', 'error');
+                return;
+            }
+            
+            showNotification('📥 Caricamento dati da GitHub...', 'info');
+            
+            try {
+                const fileName = 'tire-inventory-data.json';
+                const response = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${fileName}`, {
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const fileData = await response.json();
+                    const content = JSON.parse(decodeURIComponent(escape(atob(fileData.content))));
+                    
+                    if (content.data && Array.isArray(content.data)) {
+                        // Conferma prima di sovrascrivere
+                        if (tiresData.length > 0) {
+                            if (!confirm('⚠️ Questo sovrascriverà i dati locali. Continuare?')) {
+                                return;
+                            }
+                        }
+                        
+                        // Carica i dati
+                        tiresData = content.data;
+                        filteredTires = [...tiresData];
+                        
+                        // Carica marche e codici personalizzati se presenti
+                        if (content.customBrands) {
+                            localStorage.setItem('customBrands', JSON.stringify(content.customBrands));
+                        }
+                        if (content.customSpeedCodes) {
+                            localStorage.setItem('customSpeedCodes', JSON.stringify(content.customSpeedCodes));
+                        }
+                        
+                        // Salva localmente
+                        localStorage.setItem('tiresData', JSON.stringify(tiresData));
+                        localStorage.setItem('github_last_load', new Date().toISOString());
+                        
+                        // Aggiorna interfaccia
+                        updateStats();
+                        updateFilters();
+                        renderTires();
+                        loadCustomOptions();
+                        
+                        showNotification(`✅ ${tiresData.length} pneumatici caricati da GitHub!`, 'success');
+                        updateGitHubConnectionStatus(true);
+                    } else {
+                        throw new Error('Formato dati non valido');
+                    }
+                } else if (response.status === 404) {
+                    showNotification('📄 Nessun backup trovato su GitHub', 'info');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+            } catch (error) {
+                console.error('Errore caricamento GitHub:', error);
+                showNotification(`❌ Errore caricamento: ${error.message}`, 'error');
+                updateGitHubConnectionStatus(false);
+            }
+        }
+
+        function updateGitHubConnectionStatus(connected = null) {
+            const statusElements = document.querySelectorAll('.github-status');
+            const isConnected = connected !== null ? connected : githubConfig.configured;
+            
+            statusElements.forEach(element => {
+                const dot = element.querySelector('.status-dot');
+                const text = element.querySelector('.status-text');
+                
+                if (isConnected) {
+                    dot.className = 'status-dot w-2 h-2 bg-green-400 rounded-full animate-pulse';
+                    text.textContent = `Connesso a ${githubConfig.owner}/${githubConfig.repo}`;
+                    element.className = element.className.replace('bg-gray-100/50', 'bg-green-100/50');
+                } else {
+                    dot.className = 'status-dot w-2 h-2 bg-gray-400 rounded-full';
+                    text.textContent = 'GitHub non configurato';
+                    element.className = element.className.replace('bg-green-100/50', 'bg-gray-100/50');
+                }
+            });
+        }
+
+        function updateGitHubStatus(synced) {
+            // Aggiorna visivamente lo stato della sincronizzazione
+            const lastSync = localStorage.getItem('github_last_sync');
+            if (lastSync && synced) {
+                const syncDate = new Date(lastSync);
+                console.log(`🔄 Ultima sincronizzazione GitHub: ${syncDate.toLocaleString('it-IT')}`);
+            }
+        }
+
+        function loadFromGitHub() {
+            try {
+                const githubBackup = localStorage.getItem('github_backup');
+                if (githubBackup) {
+                    const backup = JSON.parse(githubBackup);
+                    if (backup.data && Array.isArray(backup.data)) {
+                        // Verifica se i dati GitHub sono più recenti
+                        const githubTimestamp = new Date(backup.timestamp);
+                        const localTimestamp = new Date(localStorage.getItem('last_update') || '1970-01-01');
+                        
+                        if (githubTimestamp > localTimestamp) {
+                            tiresData = backup.data;
+                            filteredTires = [...tiresData];
+                            localStorage.setItem('tiresData', JSON.stringify(tiresData));
+                            localStorage.setItem('last_update', backup.timestamp);
+                            
+                            showNotification('📥 Dati ripristinati da GitHub!', 'success');
+                            return true;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Errore caricamento da GitHub:', error);
+            }
+            return false;
+        }
+
+        // Auto-sync con GitHub ogni 10 minuti (se abilitato)
+        function startGitHubAutoSync() {
+            setInterval(() => {
+                if (githubConfig.configured && tiresData.length > 0) {
+                    const lastSync = localStorage.getItem('github_last_sync');
+                    const now = new Date();
+                    const lastSyncDate = lastSync ? new Date(lastSync) : new Date(0);
+                    
+                    // Auto-sync ogni 10 minuti
+                    if (now - lastSyncDate > 10 * 60 * 1000) {
+                        console.log('🔄 Auto-sync GitHub attivato');
+                        syncWithGitHub();
+                    }
+                }
+            }, 60000); // Controlla ogni minuto
+        }
+
+        // Event listener per il modal GitHub
+        document.getElementById('githubModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeGitHubModal();
+            }
+        });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96c85fe3c1cfea63',t:'MTc1NDc1NDI2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96c9cba6c2b9ea5d',t:'MTc1NDc2OTE2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
