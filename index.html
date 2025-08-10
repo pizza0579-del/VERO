@@ -229,6 +229,12 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
         .export-btn {
             background: linear-gradient(135deg, #10b981, #059669);
             transition: all 0.3s ease;
@@ -349,6 +355,15 @@
                 
                 <!-- Desktop Menu -->
                 <div class="hidden lg:flex items-center space-x-3">
+                    <div id="userInfo" class="flex items-center space-x-2 px-3 py-2 rounded-full bg-green-100/50" style="display: none;">
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <span id="userInitials" class="text-white text-xs font-bold"></span>
+                        </div>
+                        <div class="text-left">
+                            <p id="userName" class="text-sm font-medium text-gray-800"></p>
+                            <p id="userRole" class="text-xs text-gray-600"></p>
+                        </div>
+                    </div>
                     <div id="connectionStatusDesktop" class="flex items-center space-x-2 px-3 py-2 rounded-full bg-blue-100/50">
                         <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
                         <span class="text-sm font-medium text-gray-700">Modalità Offline</span>
@@ -371,12 +386,18 @@
                         </svg>
                         <span class="hidden xl:inline">PDF</span>
                     </button>
-                    <button onclick="showAddModal()" class="btn-primary text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2">
+                    <button onclick="showAddModal()" class="btn-primary text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2" id="addButton">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
                         <span class="hidden xl:inline">Nuovo</span>
                         <span class="xl:hidden">+</span>
+                    </button>
+                    <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2" id="logoutButton" style="display: none;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                        </svg>
+                        <span class="hidden xl:inline">Esci</span>
                     </button>
                 </div>
             </div>
@@ -407,11 +428,17 @@
                             </svg>
                             <span>PDF</span>
                         </button>
-                        <button onclick="showAddModal(); closeMobileMenu();" class="btn-primary text-white px-3 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center space-x-2 text-sm">
+                        <button onclick="showAddModal(); closeMobileMenu();" class="btn-primary text-white px-3 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center space-x-2 text-sm" id="addButtonMobile">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
                             <span>Nuovo</span>
+                        </button>
+                        <button onclick="logout(); closeMobileMenu();" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center space-x-2 text-sm" id="logoutButtonMobile" style="display: none;">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                            </svg>
+                            <span>Esci</span>
                         </button>
                     </div>
                 </div>
@@ -697,6 +724,56 @@
         </div>
     </div>
 
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal" style="display: block;">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity">
+                <div class="absolute inset-0 bg-gray-900 opacity-90"></div>
+            </div>
+            <div class="inline-block align-bottom glass-effect rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+                <div class="px-6 pt-6 pb-4">
+                    <div class="text-center mb-6">
+                        <div class="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">🔐 Accesso Riservato</h2>
+                        <p class="text-sm text-gray-600">TireManager Pro - Sistema Gestionale</p>
+                    </div>
+                    
+                    <form id="loginForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">👤 Username</label>
+                            <input type="text" id="loginUsername" required class="search-input w-full rounded-lg px-4 py-3 focus:outline-none text-sm" placeholder="Inserisci username" autocomplete="username">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">🔑 Password</label>
+                            <input type="password" id="loginPassword" required class="search-input w-full rounded-lg px-4 py-3 focus:outline-none text-sm" placeholder="Inserisci password" autocomplete="current-password">
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="rememberMe" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <label for="rememberMe" class="ml-2 block text-sm text-gray-700">Ricordami</label>
+                        </div>
+                    </form>
+                    
+                    <div id="loginError" class="hidden mt-4 p-3 bg-red-100 border border-red-300 rounded-lg"> 
+                        <p class="text-sm text-red-700 font-medium">❌ Credenziali non valide</p>
+                    </div>
+                    
+                  
+                <div class="bg-gray-50/80 px-6 py-4">
+                    <button type="button" onclick="attemptLogin()" class="w-full btn-primary text-white px-6 py-3 rounded-lg font-medium text-sm flex items-center justify-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                        </svg>
+                        <span>Accedi al Sistema</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- GitHub Modal -->
     <div id="githubModal" class="modal">
         <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -723,20 +800,32 @@
                     
                     <div class="space-y-6">
                         <!-- Status Connessione -->
-                        <div class="github-status bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4">
+                        <div class="github-status bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-4">
                             <div class="flex items-center space-x-3 mb-3">
-                                <div class="status-dot w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                <div class="status-dot w-3 h-3 bg-gray-400 rounded-full"></div>
                                 <h4 class="text-lg font-semibold text-gray-800">Stato Connessione</h4>
                             </div>
                             <div class="ml-6">
-                                <p class="status-text text-sm text-gray-600 font-medium">Connesso a pizza0579-del/VERO</p>
-                                <p class="text-xs text-gray-500 mt-1">Repository configurato e pronto per la sincronizzazione</p>
+                                <p class="status-text text-sm text-gray-600 font-medium">GitHub non configurato</p>
+                                <p class="text-xs text-gray-500 mt-1">Inserisci le credenziali per abilitare la sincronizzazione</p>
                             </div>
                         </div>
 
                         <!-- Configurazione GitHub -->
                         <div class="space-y-4">
                             <h4 class="text-lg font-semibold text-gray-800">🔧 Configurazione Repository</h4>
+                            
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                                <h5 class="font-semibold text-blue-800 mb-2">📝 Come creare un Personal Access Token:</h5>
+                                <ol class="text-sm text-blue-700 space-y-1 list-decimal list-inside">
+                                    <li>Vai su <a href="https://github.com/settings/tokens" target="_blank" class="underline font-medium">GitHub Settings → Developer settings → Personal access tokens</a></li>
+                                    <li>Clicca "Generate new token (classic)"</li>
+                                    <li>Dai un nome al token (es. "TireManager Pro")</li>
+                                    <li>Seleziona i permessi: <strong>repo</strong> (accesso completo ai repository)</li>
+                                    <li>Clicca "Generate token" e copia il token generato</li>
+                                </ol>
+                                <p class="text-xs text-blue-600 mt-2 font-medium">⚠️ Il token inizia con "ghp_" o "github_pat_" ed è lungo circa 40+ caratteri</p>
+                            </div>
                             
                             <div class="grid grid-cols-1 gap-4">
                                 <div>
@@ -857,12 +946,279 @@
         let filteredTires = [];
         let currentEditId = null;
         let isAuthenticated = false;
+        let currentUser = null;
         let currentView = 'grid';
+        
+        // 👥 SISTEMA UTENTI CON RUOLI - AGGIUNGI QUI I NUOVI UTENTI
+        const users = {
+            admin: {
+                username: 'admin',
+                password: 'admin123',
+                role: 'admin',
+                name: 'Amministratore',
+                permissions: ['read', 'write', 'delete', 'export', 'manage_users']
+            },
+            manager: {
+                username: 'manager',
+                password: 'manager123',
+                role: 'manager', 
+                name: 'Responsabile',
+                permissions: ['read', 'write', 'delete', 'export']
+            },
+            employee: {
+                username: 'dipendente',
+                password: 'dipendente123',
+                role: 'employee',
+                name: 'Dipendente',
+                permissions: ['read', 'write']
+            },
+            viewer: {
+                username: 'ospite',
+                password: 'ospite123',
+                role: 'viewer',
+                name: 'Visualizzatore',
+                permissions: ['read']
+            },
+            
+            // 🆕 AGGIUNGI NUOVI UTENTI QUI SOTTO:
+            // Esempio di nuovo utente:
+            /*
+            nuovoutente: {
+                username: 'tuousername',        // Username per il login
+                password: 'tuapassword',        // Password per il login
+                role: 'employee',               // Ruolo: admin, manager, employee, viewer
+                name: 'Il Tuo Nome Completo',  // Nome visualizzato nell'interfaccia
+                permissions: ['read', 'write'] // Permessi specifici
+            },
+            */
+            
+            // 👨‍💼 Esempio utente personalizzato:
+            officina: {
+                username: 'officina',
+                password: 'officina25',
+                role: 'manager',
+                name: 'Officina Manager',
+                permissions: ['read', 'write', 'delete', 'export']
+            }
+        };
 
         document.addEventListener('DOMContentLoaded', function() {
+            // Controlla se l'utente è già autenticato
+            checkExistingAuth();
+            
             // Carica configurazione GitHub
             loadGitHubConfig();
             
+            // Event listener per il form di login
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                attemptLogin();
+            });
+            
+            // Event listener per Enter nei campi di login
+            document.getElementById('loginUsername').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') attemptLogin();
+            });
+            document.getElementById('loginPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') attemptLogin();
+            });
+        });
+        
+        function checkExistingAuth() {
+            const savedAuth = localStorage.getItem('tiremanager_auth');
+            const rememberMe = localStorage.getItem('tiremanager_remember');
+            
+            if (savedAuth && rememberMe === 'true') {
+                try {
+                    const authData = JSON.parse(savedAuth);
+                    const user = users[authData.username];
+                    
+                    if (user && user.password === authData.password) {
+                        currentUser = user;
+                        isAuthenticated = true;
+                        showMainApp();
+                        initializeAppAfterLogin();
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Errore autenticazione salvata:', error);
+                }
+            }
+            
+            // Se non autenticato, mostra login
+            showLoginModal();
+        }
+        
+        function attemptLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            const errorDiv = document.getElementById('loginError');
+            
+            // Reset errore
+            errorDiv.classList.add('hidden');
+            
+            if (!username || !password) {
+                showLoginError('Inserisci username e password');
+                return;
+            }
+            
+            // Verifica credenziali
+            const user = users[username];
+            if (user && user.password === password) {
+                // Login riuscito
+                currentUser = user;
+                isAuthenticated = true;
+                
+                // Salva autenticazione se richiesto
+                if (rememberMe) {
+                    localStorage.setItem('tiremanager_auth', JSON.stringify({
+                        username: username,
+                        password: password,
+                        loginTime: new Date().toISOString()
+                    }));
+                    localStorage.setItem('tiremanager_remember', 'true');
+                } else {
+                    localStorage.removeItem('tiremanager_auth');
+                    localStorage.removeItem('tiremanager_remember');
+                }
+                
+                showMainApp();
+                initializeAppAfterLogin();
+                showNotification(`🎉 Benvenuto ${user.name}!`, 'success');
+                
+            } else {
+                showLoginError('Username o password non corretti');
+            }
+        }
+        
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.querySelector('p').textContent = `❌ ${message}`;
+            errorDiv.classList.remove('hidden');
+            
+            // Shake animation
+            const loginModal = document.querySelector('#loginModal .glass-effect');
+            loginModal.style.animation = 'shake 0.5s ease-in-out';
+            setTimeout(() => {
+                loginModal.style.animation = '';
+            }, 500);
+        }
+        
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function showMainApp() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            
+            // Mostra info utente
+            updateUserInterface();
+            
+            // Applica permessi
+            applyUserPermissions();
+        }
+        
+        function updateUserInterface() {
+            if (!currentUser) return;
+            
+            // Aggiorna info utente nell'header
+            const userInfo = document.getElementById('userInfo');
+            const userInitials = document.getElementById('userInitials');
+            const userName = document.getElementById('userName');
+            const userRole = document.getElementById('userRole');
+            
+            userInitials.textContent = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            userName.textContent = currentUser.name;
+            userRole.textContent = getRoleDisplayName(currentUser.role);
+            
+            userInfo.style.display = 'flex';
+            
+            // Mostra pulsanti logout
+            document.getElementById('logoutButton').style.display = 'flex';
+            document.getElementById('logoutButtonMobile').style.display = 'flex';
+        }
+        
+        function getRoleDisplayName(role) {
+            const roleNames = {
+                admin: '👑 Amministratore',
+                manager: '👨‍💼 Responsabile', 
+                employee: '👷 Dipendente',
+                viewer: '👁️ Visualizzatore'
+            };
+            return roleNames[role] || role;
+        }
+        
+        function applyUserPermissions() {
+            if (!currentUser) return;
+            
+            const permissions = currentUser.permissions;
+            
+            // Controllo pulsanti di scrittura
+            const writeButtons = ['addButton', 'addButtonMobile'];
+            writeButtons.forEach(buttonId => {
+                const button = document.getElementById(buttonId);
+                if (button) {
+                    if (permissions.includes('write')) {
+                        button.style.display = 'flex';
+                    } else {
+                        button.style.display = 'none';
+                    }
+                }
+            });
+            
+            // Controllo pulsanti export
+            const exportButtons = document.querySelectorAll('[onclick*="exportData"], [onclick*="printToPDF"]');
+            exportButtons.forEach(button => {
+                if (permissions.includes('export')) {
+                    button.style.display = 'flex';
+                } else {
+                    button.style.display = 'none';
+                }
+            });
+            
+            // Controllo GitHub (solo admin e manager)
+            const githubButtons = document.querySelectorAll('[onclick*="showGitHubModal"], [onclick*="syncWithGitHub"]');
+            githubButtons.forEach(button => {
+                if (permissions.includes('export')) {
+                    button.style.display = 'flex';
+                } else {
+                    button.style.display = 'none';
+                }
+            });
+        }
+        
+        function hasPermission(permission) {
+            return currentUser && currentUser.permissions.includes(permission);
+        }
+        
+        function logout() {
+            if (confirm('🚪 Sei sicuro di voler uscire dal sistema?')) {
+                // Pulisci autenticazione
+                currentUser = null;
+                isAuthenticated = false;
+                localStorage.removeItem('tiremanager_auth');
+                localStorage.removeItem('tiremanager_remember');
+                
+                // Nascondi elementi utente
+                document.getElementById('userInfo').style.display = 'none';
+                document.getElementById('logoutButton').style.display = 'none';
+                document.getElementById('logoutButtonMobile').style.display = 'none';
+                
+                // Mostra login
+                showLoginModal();
+                
+                // Reset form
+                document.getElementById('loginForm').reset();
+                document.getElementById('loginError').classList.add('hidden');
+                
+                showNotification('👋 Logout effettuato con successo', 'info');
+            }
+        }
+        
+        function initializeAppAfterLogin() {
             // Attendi che Firebase sia pronto
             if (window.firebaseReady) {
                 initializeApp();
@@ -887,7 +1243,7 @@
             
             // Avvia auto-sync GitHub
             startGitHubAutoSync();
-        });
+        }
 
         function initializeApp() {
             if (window.firebaseReady) {
@@ -1242,16 +1598,20 @@
                                     ${tire.brand.substring(0, 3).toUpperCase()}
                                 </div>
                                 <div class="flex space-x-1 sm:space-x-2">
+                                    ${hasPermission('write') ? `
                                     <button onclick="editTire('${tire.id}')" class="text-blue-600 hover:text-blue-800 p-1.5 sm:p-2 rounded-lg hover:bg-blue-50 transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                         </svg>
                                     </button>
+                                    ` : ''}
+                                    ${hasPermission('delete') ? `
                                     <button onclick="deleteTire('${tire.id}')" class="text-red-600 hover:text-red-800 p-1.5 sm:p-2 rounded-lg hover:bg-red-50 transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>
                                     </button>
+                                    ` : ''}
                                 </div>
                             </div>
                             
@@ -1322,16 +1682,20 @@
                                         ` : ''}
                                     </div>
                                     <div class="flex space-x-1 sm:space-x-2">
+                                        ${hasPermission('write') ? `
                                         <button onclick="editTire('${tire.id}')" class="text-blue-600 hover:text-blue-800 p-1.5 sm:p-2 rounded-lg hover:bg-blue-50 transition-colors">
                                             <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
                                         </button>
+                                        ` : ''}
+                                        ${hasPermission('delete') ? `
                                         <button onclick="deleteTire('${tire.id}')" class="text-red-600 hover:text-red-800 p-1.5 sm:p-2 rounded-lg hover:bg-red-50 transition-colors">
                                             <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                             </svg>
                                         </button>
+                                        ` : ''}
                                     </div>
                                 </div>
                             </div>
@@ -1397,6 +1761,11 @@
         }
 
         function showAddModal() {
+            if (!hasPermission('write')) {
+                showNotification('⚠️ Non hai i permessi per aggiungere pneumatici', 'error');
+                return;
+            }
+            
             currentEditId = null;
             document.getElementById('modalTitle').textContent = 'Aggiungi Pneumatico';
             document.getElementById('tireForm').reset();
@@ -1404,6 +1773,11 @@
         }
 
         function editTire(id) {
+            if (!hasPermission('write')) {
+                showNotification('⚠️ Non hai i permessi per modificare pneumatici', 'error');
+                return;
+            }
+            
             const tire = tiresData.find(t => t.id === id);
             if (!tire) return;
 
@@ -1628,6 +2002,11 @@
         }
 
         function deleteTire(id) {
+            if (!hasPermission('delete')) {
+                showNotification('⚠️ Non hai i permessi per eliminare pneumatici', 'error');
+                return;
+            }
+            
             if (!confirm('⚠️ Sei sicuro di voler eliminare questo pneumatico?')) return;
 
             if (window.firebaseReady) {
@@ -1670,6 +2049,11 @@
         }
 
         function exportData() {
+            if (!hasPermission('export')) {
+                showNotification('⚠️ Non hai i permessi per esportare i dati', 'error');
+                return;
+            }
+            
             const dataStr = JSON.stringify(tiresData, null, 2);
             const dataBlob = new Blob([dataStr], {type: 'application/json'});
             const url = URL.createObjectURL(dataBlob);
@@ -1683,6 +2067,11 @@
         }
 
         function printToPDF() {
+            if (!hasPermission('export')) {
+                showNotification('⚠️ Non hai i permessi per generare PDF', 'error');
+                return;
+            }
+            
             showNotification('📄 Generazione PDF in corso...', 'info');
             
             // Crea una nuova finestra per la stampa
@@ -2016,10 +2405,10 @@
 
         // GitHub Integration Functions
         let githubConfig = {
-            token: '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',
+            token: '',
             owner: 'pizza0579-del',
             repo: 'VERO',
-            configured: true
+            configured: false
         };
 
         // Carica configurazione GitHub salvata o usa quella predefinita
@@ -2039,10 +2428,36 @@
                 localStorage.setItem('github_config', JSON.stringify(githubConfig));
             }
             
-            updateGitHubConnectionStatus();
+            // Carica stato connessione precedente
+            const connectionStatus = localStorage.getItem('github_connection_status');
+            const lastTest = localStorage.getItem('github_last_test');
+            
+            if (connectionStatus === 'connected' && lastTest) {
+                const lastTestDate = new Date(lastTest);
+                const now = new Date();
+                
+                // Se l'ultimo test è stato meno di 5 minuti fa, considera ancora connesso
+                if (now - lastTestDate < 5 * 60 * 1000) {
+                    updateGitHubConnectionStatus(true);
+                } else {
+                    // Testa automaticamente la connessione
+                    setTimeout(() => testGitHubConnection(), 1000);
+                }
+            } else {
+                updateGitHubConnectionStatus(false);
+                // Testa automaticamente se configurato
+                if (githubConfig.configured) {
+                    setTimeout(() => testGitHubConnection(), 2000);
+                }
+            }
         }
 
         function showGitHubModal() {
+            if (!hasPermission('export')) {
+                showNotification('⚠️ Non hai i permessi per accedere a GitHub', 'error');
+                return;
+            }
+            
             document.getElementById('githubModal').style.display = 'block';
             
             // Popola i campi con la configurazione attuale
@@ -2067,6 +2482,17 @@
                 return;
             }
             
+            // Validazione formato token
+            if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
+                showNotification('⚠️ Il token deve iniziare con "ghp_" o "github_pat_"', 'error');
+                return;
+            }
+            
+            if (token.length < 40) {
+                showNotification('⚠️ Il token sembra troppo corto. Verifica che sia completo.', 'error');
+                return;
+            }
+            
             githubConfig = {
                 token: token,
                 owner: owner,
@@ -2084,38 +2510,88 @@
         async function testGitHubConnection() {
             if (!githubConfig.configured) {
                 showNotification('⚠️ Configura prima GitHub', 'error');
-                return;
+                return false;
             }
             
             showNotification('🔄 Test connessione GitHub...', 'info');
             
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 secondi timeout
+                
                 const response = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}`, {
                     headers: {
                         'Authorization': `token ${githubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
+                        'Accept': 'application/vnd.github.v3+json',
+                        'User-Agent': 'TireManager-Pro/1.0'
+                    },
+                    signal: controller.signal
                 });
+                
+                clearTimeout(timeoutId);
                 
                 if (response.ok) {
                     const repoData = await response.json();
                     showNotification(`✅ Connesso a ${repoData.full_name}!`, 'success');
                     updateGitHubConnectionStatus(true);
+                    
+                    // Salva stato connessione
+                    localStorage.setItem('github_connection_status', 'connected');
+                    localStorage.setItem('github_last_test', new Date().toISOString());
+                    
                     return true;
+                } else if (response.status === 401) {
+                    throw new Error('🔑 Token non valido o scaduto. Genera un nuovo token su GitHub.');
+                } else if (response.status === 404) {
+                    throw new Error('📁 Repository non trovato. Verifica owner/repo o crea il repository.');
+                } else if (response.status === 403) {
+                    const errorData = await response.json().catch(() => ({}));
+                    if (errorData.message && errorData.message.includes('rate limit')) {
+                        throw new Error('⏱️ Limite di richieste raggiunto. Riprova tra qualche minuto.');
+                    } else {
+                        throw new Error('🚫 Accesso negato. Il token deve avere permessi "repo".');
+                    }
                 } else {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    throw new Error(`❌ Errore HTTP ${response.status}: ${response.statusText}`);
                 }
             } catch (error) {
                 console.error('Errore test GitHub:', error);
-                showNotification(`❌ Errore connessione: ${error.message}`, 'error');
+                
+                let errorMessage = 'Errore di connessione';
+                if (error.name === 'AbortError') {
+                    errorMessage = 'Timeout connessione - controlla la rete';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Impossibile raggiungere GitHub - controlla la connessione internet';
+                } else {
+                    errorMessage = error.message;
+                }
+                
+                showNotification(`❌ ${errorMessage}`, 'error');
                 updateGitHubConnectionStatus(false);
+                
+                // Salva stato disconnessione
+                localStorage.setItem('github_connection_status', 'disconnected');
+                localStorage.setItem('github_last_error', errorMessage);
+                
                 return false;
             }
         }
 
-        async function syncWithGitHub() {
+        async function syncWithGitHub(retryCount = 0) {
             if (!githubConfig.configured) {
                 showNotification('⚠️ Configura prima GitHub', 'error');
+                return;
+            }
+            
+            // Prima testa la connessione
+            const isConnected = await testGitHubConnection();
+            if (!isConnected && retryCount === 0) {
+                showNotification('🔄 Tentativo di riconnessione...', 'info');
+                return syncWithGitHub(1); // Riprova una volta
+            }
+            
+            if (!isConnected) {
+                showNotification('❌ Impossibile connettersi a GitHub', 'error');
                 return;
             }
             
@@ -2138,12 +2614,13 @@
                     }
                 };
                 
-                // Salva su GitHub
-                const success = await saveToGitHub(githubBackup);
+                // Salva su GitHub con retry
+                const success = await saveToGitHub(githubBackup, retryCount);
                 
                 if (success) {
                     localStorage.setItem('github_backup', JSON.stringify(githubBackup));
                     localStorage.setItem('github_last_sync', new Date().toISOString());
+                    localStorage.setItem('github_connection_status', 'connected');
                     showNotification('✅ Dati sincronizzati con GitHub!', 'success');
                     updateGitHubConnectionStatus(true);
                 } else {
@@ -2154,36 +2631,44 @@
                 console.error('Errore sincronizzazione GitHub:', error);
                 showNotification('❌ Errore durante la sincronizzazione GitHub', 'error');
                 updateGitHubConnectionStatus(false);
+                localStorage.setItem('github_connection_status', 'disconnected');
             }
         }
 
-        async function saveToGitHub(data) {
+        async function saveToGitHub(data, retryCount = 0) {
             try {
                 const fileName = 'tire-inventory-data.json';
                 const content = JSON.stringify(data, null, 2);
                 const encodedContent = btoa(unescape(encodeURIComponent(content)));
                 
-                // Controlla se il file esiste già
+                // Controlla se il file esiste già con timeout
                 let sha = null;
                 try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 8000);
+                    
                     const existingFile = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${fileName}`, {
                         headers: {
                             'Authorization': `token ${githubConfig.token}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
+                            'Accept': 'application/vnd.github.v3+json',
+                            'User-Agent': 'TireManager-Pro/1.0'
+                        },
+                        signal: controller.signal
                     });
+                    
+                    clearTimeout(timeoutId);
                     
                     if (existingFile.ok) {
                         const fileData = await existingFile.json();
                         sha = fileData.sha;
                     }
                 } catch (error) {
-                    // File non esiste, continua senza SHA
+                    console.log('File non esiste o errore nel recupero SHA:', error.message);
                 }
                 
                 // Crea o aggiorna il file
                 const commitData = {
-                    message: `🔄 Aggiornamento inventario pneumatici - ${new Date().toLocaleString('it-IT')}`,
+                    message: `🔄 Aggiornamento inventario pneumatici - ${new Date().toLocaleString('it-IT')} (${data.data.length} articoli)`,
                     content: encodedContent,
                     branch: 'main'
                 };
@@ -2192,27 +2677,57 @@
                     commitData.sha = sha;
                 }
                 
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 secondi per il commit
+                
                 const response = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${fileName}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `token ${githubConfig.token}`,
                         'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'TireManager-Pro/1.0'
                     },
-                    body: JSON.stringify(commitData)
+                    body: JSON.stringify(commitData),
+                    signal: controller.signal
                 });
+                
+                clearTimeout(timeoutId);
                 
                 if (response.ok) {
                     const result = await response.json();
                     console.log('✅ File salvato su GitHub:', result.commit.html_url);
+                    
+                    // Aggiorna stato connessione
+                    localStorage.setItem('github_connection_status', 'connected');
+                    localStorage.setItem('github_last_test', new Date().toISOString());
+                    
                     return true;
                 } else {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Errore API GitHub');
+                    const errorData = await response.json().catch(() => ({}));
+                    const errorMessage = errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+                    
+                    if (response.status === 409 && retryCount < 2) {
+                        // Conflitto - riprova dopo un breve delay
+                        console.log('Conflitto rilevato, riprovo...');
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        return saveToGitHub(data, retryCount + 1);
+                    }
+                    
+                    throw new Error(errorMessage);
                 }
                 
             } catch (error) {
                 console.error('Errore salvataggio GitHub:', error);
+                
+                if (error.name === 'AbortError') {
+                    console.error('Timeout durante il salvataggio su GitHub');
+                }
+                
+                // Aggiorna stato disconnessione
+                localStorage.setItem('github_connection_status', 'disconnected');
+                localStorage.setItem('github_last_error', error.message);
+                
                 return false;
             }
         }
@@ -2344,19 +2859,45 @@
 
         // Auto-sync con GitHub ogni 10 minuti (se abilitato)
         function startGitHubAutoSync() {
+            // Controlla connessione ogni 2 minuti
             setInterval(() => {
-                if (githubConfig.configured && tiresData.length > 0) {
-                    const lastSync = localStorage.getItem('github_last_sync');
-                    const now = new Date();
-                    const lastSyncDate = lastSync ? new Date(lastSync) : new Date(0);
+                if (githubConfig.configured) {
+                    const lastTest = localStorage.getItem('github_last_test');
+                    const connectionStatus = localStorage.getItem('github_connection_status');
                     
-                    // Auto-sync ogni 10 minuti
-                    if (now - lastSyncDate > 10 * 60 * 1000) {
-                        console.log('🔄 Auto-sync GitHub attivato');
-                        syncWithGitHub();
+                    if (lastTest) {
+                        const lastTestDate = new Date(lastTest);
+                        const now = new Date();
+                        
+                        // Se l'ultimo test è stato più di 5 minuti fa, testa di nuovo
+                        if (now - lastTestDate > 5 * 60 * 1000) {
+                            console.log('🔍 Controllo connessione GitHub...');
+                            testGitHubConnection();
+                        }
+                    }
+                    
+                    // Auto-sync se connesso e ci sono dati
+                    if (connectionStatus === 'connected' && tiresData.length > 0) {
+                        const lastSync = localStorage.getItem('github_last_sync');
+                        const now = new Date();
+                        const lastSyncDate = lastSync ? new Date(lastSync) : new Date(0);
+                        
+                        // Auto-sync ogni 10 minuti
+                        if (now - lastSyncDate > 10 * 60 * 1000) {
+                            console.log('🔄 Auto-sync GitHub attivato');
+                            syncWithGitHub();
+                        }
                     }
                 }
-            }, 60000); // Controlla ogni minuto
+            }, 2 * 60 * 1000); // Controlla ogni 2 minuti
+            
+            // Primo controllo dopo 5 secondi
+            setTimeout(() => {
+                if (githubConfig.configured) {
+                    console.log('🔍 Controllo iniziale connessione GitHub...');
+                    testGitHubConnection();
+                }
+            }, 5000);
         }
 
         // Event listener per il modal GitHub
@@ -2366,5 +2907,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96c9cba6c2b9ea5d',t:'MTc1NDc2OTE2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96cfcd836261ea52',t:'MTc1NDgzMjE1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
